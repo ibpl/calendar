@@ -38,13 +38,15 @@
 							:value.sync="editing.name" />
 						<TextInput class="appointment-config-modal__form__row"
 							:label="t('calendar', 'Location')"
-							:value.sync="editing.location" />
-						<div class="appointment-config-modal__form__row">
-							<ActionCheckbox :checked.sync="editing.createTalkRoom" class="row--checkbox">
-								{{ t('calendar', 'Create a Talk room for every booked appointment') }}
-							</ActionCheckbox>
+							:value.sync="editing.location"
+							:disabled="talkEnabled && editing.createTalkRoom" />
+						<div v-if="talkEnabled" class="appointment-config-modal__form__row">
+							<NcCheckboxRadioSwitch :checked.sync="editing.createTalkRoom">
+								{{ t('calendar', 'Create a Talk room') }}
+							</NcCheckboxRadioSwitch>
+							<span class="appointment-config-modal__talk-room-description">{{ t('calendar', 'A unique link will be generated for every booked appointment and sent via the confirmation email') }}</span>
 						</div>
-			  		<TextArea class="appointment-config-modal__form__row"
+						<TextArea class="appointment-config-modal__form__row"
 							:label="t('calendar', 'Description')"
 							:value.sync="editing.description" />
 
@@ -148,8 +150,8 @@ import Modal from '@nextcloud/vue/dist/Components/NcModal.js'
 import TextInput from './AppointmentConfigModal/TextInput.vue'
 import TextArea from './AppointmentConfigModal/TextArea.vue'
 import AppointmentConfig from '../models/appointmentConfig.js'
-import ActionCheckbox from '@nextcloud/vue/dist/Components/ActionCheckbox'
-import { mapGetters } from 'vuex'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch'
+import { mapGetters, mapState } from 'vuex'
 import CalendarPicker from './Shared/CalendarPicker.vue'
 import DurationInput from './AppointmentConfigModal/DurationInput.vue'
 import NumberInput from './AppointmentConfigModal/NumberInput.vue'
@@ -162,13 +164,13 @@ import Confirmation from './AppointmentConfigModal/Confirmation.vue'
 export default {
 	name: 'AppointmentConfigModal',
 	components: {
-	  ActionCheckbox,
 		CalendarAvailability,
-		CheckedDurationSelect,
-		CalendarPicker,
-		DurationInput,
-		Modal,
-		NumberInput,
+	  CheckedDurationSelect,
+	  CalendarPicker,
+	  DurationInput,
+	  Modal,
+	  NcCheckboxRadioSwitch,
+	  NumberInput,
 		TextInput,
 		TextArea,
 		DurationSelect,
@@ -198,6 +200,9 @@ export default {
 		...mapGetters([
 			'ownSortedCalendars',
 		]),
+		...mapState({
+			talkEnabled: state => state.settings.talkEnabled,
+		}),
 		formTitle() {
 			if (this.isNew) {
 				return this.$t('calendar', 'Create appointment')
@@ -255,6 +260,11 @@ export default {
 			this.enableFollowupDuration = !!this.editing.followupDuration
 			this.enableFutureLimit = !!this.editing.futureLimit
 
+			// Disable Talk integration if Talk is no longer available
+			if (!this.talkEnabled) {
+				this.editing.createTalkRoom = false
+			}
+
 			this.showConfirmation = false
 		},
 		calendarUrlToUri(url) {
@@ -306,9 +316,10 @@ export default {
 }
 </script>
 
-<style scoped>
-.row--checkbox {
-		list-style: none;
-		margin-left: -14px;
+<style lang="scss" scoped>
+.appointment-config-modal {
+		&__talk-room-description {
+			color: var(--color-text-maxcontrast);
+		}
 }
 </style>

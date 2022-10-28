@@ -26,7 +26,8 @@
 		<input :id="id"
 			type="text"
 			:value="value"
-			@input="change">
+			@input="change"
+			:disabled="disabled">
 	</div>
 </template>
 
@@ -43,6 +44,10 @@ export default {
 		value: {
 			type: String,
 			default: '',
+		},
+		disabled: {
+			type: Boolean,
+				default: false,
 		},
 	},
 	data() {
