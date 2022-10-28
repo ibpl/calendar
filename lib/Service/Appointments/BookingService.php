@@ -120,21 +120,30 @@ class BookingService {
 			throw new ClientException('Could not make sense of booking times');
 		}
 
-		$calendar = $this->calendarWriter->write($config, $startObj, $booking->getDisplayName(), $booking->getEmail(), $booking->getDescription());
+		// TODO: inject broker here and remove indirection
+		$this->eventDispatcher->dispatchTyped(
+			new AppointmentBookedEvent(
+				$booking,
+				$config,
+			)
+		);
+
+		$calendar = $this->calendarWriter->write(
+			$config,
+			$startObj,
+			$booking->getDisplayName(),
+			$booking->getEmail(),
+			$booking->getDescription(),
+			$config->getCreateTalkRoom() ? $booking->getTalkUrl() : $config->getLocation(),
+		);
 		$booking->setConfirmed(true);
 		$this->bookingMapper->update($booking);
+
 		try {
 			$this->mailService->sendBookingInformationEmail($booking, $config, $calendar);
 		} catch (ServiceException $e) {
 			$this->logger->info('Could not send booking information email after confirmation by user ' . $booking->getEmail(), ['exception' => $e]);
 		}
-
-		$this->eventDispatcher->dispatchTyped(
-			new AppointmentBookedEvent(
-				$booking,
-				$config
-			)
-		);
 
 		return $booking;
 	}

@@ -37,8 +37,8 @@ use function interface_exists;
 
 class AppointmentBookedListener implements IEventListener {
 
-	/** @var IServerContainer */
-	private $container;
+	/** @var IBroker */
+	private $broker;
 
 	/** @var IUserManager */
 	private $userManager;
@@ -46,10 +46,10 @@ class AppointmentBookedListener implements IEventListener {
 	/** @var LoggerInterface */
 	private $logger;
 
-	public function __construct(IServerContainer $container,
+	public function __construct(IBroker $broker,
 								IUserManager $userManager,
 								LoggerInterface $logger) {
-		$this->container = $container;
+		$this->broker = $broker;
 		$this->userManager = $userManager;
 		$this->logger = $logger;
 	}
@@ -67,24 +67,7 @@ class AppointmentBookedListener implements IEventListener {
 			return;
 		}
 
-		// TODO: remove version check with 24+
-		if (!interface_exists(IBroker::class)) {
-			// API isn't there yet
-
-			return;
-		}
-
-		try {
-			/** @var IBroker $broker */
-			$broker = $this->container->get(IBroker::class);
-		} catch (Throwable $e) {
-			$this->logger->error('Could not get Talk broker: ' . $e->getMessage(), [
-				'exception' => $e,
-			]);
-			return;
-		}
-
-		if (!$broker->hasBackend()) {
+		if (!$this->broker->hasBackend()) {
 			$this->logger->warning('Can not create Talk room for config {config} because there is no backend', [
 				'config' => $event->getConfig()->getId(),
 			]);
@@ -98,10 +81,13 @@ class AppointmentBookedListener implements IEventListener {
 			]);
 			return;
 		}
-		$broker->createConversation(
+		$conversation = $this->broker->createConversation(
 			$event->getConfig()->getName(),
 			[$organizer],
-			$broker->newConversationOptions()->setPublic(false),
+			$this->broker->newConversationOptions(),
+		);
+		$event->getBooking()->setTalkUrl(
+			$conversation->getAbsoluteUrl(),
 		);
 	}
 
