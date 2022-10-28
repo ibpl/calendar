@@ -3,7 +3,7 @@
 	-
 	- @author Julius Härtl <jus@bitgrid.net>
 	-
-	- @license GNU AGPL version 3 or any later version
+	- @license AGPL-3.0-or-later
 	-
 	- This program is free software: you can redistribute it and/or modify
 	- it under the terms of the GNU Affero General Public License as
@@ -21,17 +21,16 @@
 	-->
 
 <template>
-	<DashboardWidget
-		id="calendar_panel"
+	<DashboardWidget id="calendar_panel"
 		:items="items"
 		:loading="loading">
 		<template #default="{ item }">
 			<EmptyContent v-if="item.isEmptyItem"
 				id="calendar-widget-empty-content"
 				class="half-screen"
-				icon="icon-checkmark">
-				<template #desc>
-					{{ t('calendar', 'No more events today') }}
+				:title="t('calendar', 'No more events today')">
+				<template #icon>
+					<IconCheck :size="67" />
 				</template>
 			</EmptyContent>
 			<DashboardWidgetItem v-else
@@ -39,52 +38,59 @@
 				:sub-text="item.subText"
 				:target-url="item.targetUrl">
 				<template #avatar>
-					<div
-						v-if="item.componentName === 'VEVENT'"
+					<div v-if="item.componentName === 'VEVENT'"
 						class="calendar-dot"
 						:style="{'background-color': item.calendarColor}"
 						:title="item.calendarDisplayName" />
-					<div v-else
-						class="vtodo-checkbox"
-						:style="{'color': item.calendarColor}"
-						:title="item.calendarDisplayName" />
+					<IconCheckbox v-else
+						:fill-color="item.calendarColor" />
 				</template>
 			</DashboardWidgetItem>
 		</template>
 		<template #empty-content>
-			<EmptyContent
-				id="calendar-widget-empty-content"
-				icon="icon-calendar-dark">
-				<template #desc>
-					{{ t('calendar', 'No upcoming events') }}
-					<div class="empty-label">
-						<a class="button" :href="clickStartNew"> {{ t('calendar', 'Create a new event') }} </a>
-					</div>
+			<EmptyContent id="calendar-widget-empty-content"
+				:title="t('calendar', 'No upcoming events')">
+				<template #icon>
+					<EmptyCalendar />
 				</template>
 			</EmptyContent>
+			<div class="empty-label">
+				<NcButton type="secondary" :href="clickStartNew">
+					{{ t('calendar', 'Create a new event') }}
+				</NcButton>
+			</div>
 		</template>
 	</DashboardWidget>
 </template>
 
 <script>
 import { DashboardWidget, DashboardWidgetItem } from '@nextcloud/vue-dashboard'
-import EmptyContent from '@nextcloud/vue/dist/Components/EmptyContent'
+import EmptyContent from '@nextcloud/vue/dist/Components/NcEmptyContent.js'
+import EmptyCalendar from 'vue-material-design-icons/CalendarBlankOutline.vue'
+import IconCheck from 'vue-material-design-icons/Check.vue'
+import IconCheckbox from 'vue-material-design-icons/CheckboxBlankOutline.vue'
 import { loadState } from '@nextcloud/initial-state'
 import moment from '@nextcloud/moment'
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import { imagePath, generateUrl } from '@nextcloud/router'
-import { initializeClientForUserView } from '../services/caldavService'
-import { dateFactory } from '../utils/date'
+import { initializeClientForUserView } from '../services/caldavService.js'
+import { dateFactory } from '../utils/date.js'
 import pLimit from 'p-limit'
-import { eventSourceFunction } from '../fullcalendar/eventSources/eventSourceFunction'
-import getTimezoneManager from '../services/timezoneDataProviderService'
+import { eventSourceFunction } from '../fullcalendar/eventSources/eventSourceFunction.js'
 import loadMomentLocalization from '../utils/moment.js'
+import { DateTimeValue } from '@nextcloud/calendar-js'
+import { mapGetters } from 'vuex'
 
 export default {
 	name: 'Dashboard',
 	components: {
 	  DashboardWidget,
 		DashboardWidgetItem,
+	  NcButton,
 		EmptyContent,
+	  EmptyCalendar,
+	  IconCheck,
+	  IconCheckbox,
 	},
 	data() {
 		return {
@@ -96,6 +102,9 @@ export default {
 		}
 	},
 	computed: {
+		...mapGetters({
+			timezoneObject: 'getResolvedTimezoneObject',
+		}),
 		/**
 		 * Format loaded events
 		 *
@@ -177,12 +186,6 @@ export default {
 		 * @return {Promise<object[]>}
 		 */
 		async fetchExpandedEvents(from, to) {
-			const timeZone = this.$store.getters.getResolvedTimezone
-			let timezoneObject = getTimezoneManager().getTimezoneForId(timeZone)
-			if (!timezoneObject) {
-				timezoneObject = getTimezoneManager().getTimezoneForId('UTC')
-			}
-
 			const limit = pLimit(10)
 			const fetchEventPromises = []
 			for (const calendar of this.$store.getters.enabledCalendars) {
@@ -199,7 +202,7 @@ export default {
 					}
 
 					const calendarObjects = this.$store.getters.getCalendarObjectsByTimeRangeId(timeRangeId)
-					return eventSourceFunction(calendarObjects, calendar, from, to, timezoneObject)
+					return eventSourceFunction(calendarObjects, calendar, from, to, this.timezoneObject)
 				}))
 			}
 
@@ -252,9 +255,18 @@ export default {
 					sameElse: () => '[replace-from-now]',
 				}).replace('replace-from-now', moment(event.start).locale(locale).fromNow())
 			} else {
-				return moment(event.start).locale(locale).calendar(null, {
-					sameElse: () => '[replace-from-now]',
-				}).replace('replace-from-now', moment(event.start).locale(locale).fromNow())
+				const start = DateTimeValue.fromJSDate(event.start).getInTimezone(this.timezoneObject)
+				const utcOffset = start.utcOffset() / 60
+				return moment(event.start)
+					.utcOffset(utcOffset)
+					.locale(locale)
+					.calendar(null, {
+						sameElse: () => '[replace-from-now]',
+					})
+					.replace(
+						'replace-from-now',
+						moment(event.start).utcOffset(utcOffset).locale(locale).fromNow(),
+					)
 			}
 		},
 		/**
@@ -281,15 +293,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../fonts/scss/iconfont-calendar-app.scss';
-
 #calendar_panel {
-	.vtodo-checkbox {
-		flex-shrink: 0;
-		border-color: transparent;
-		@include iconfont('checkbox');
-	}
-
 	.calendar-dot {
 		flex-shrink: 0;
 		height: 1rem;
@@ -308,10 +312,12 @@ export default {
 			margin-bottom: 2vh;
 		}
 
-		.empty-label {
-			margin-top: 5vh;
-			margin-right: 5px;
-		}
+	}
+
+	.empty-label {
+		display: flex;
+		justify-content: center;
+		margin-top: 5vh;
 	}
 }
 </style>

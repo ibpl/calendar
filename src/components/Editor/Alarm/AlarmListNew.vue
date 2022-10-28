@@ -4,7 +4,7 @@
   - @author Georg Ehrke <oc.list@georgehrke.com>
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,8 +22,7 @@
   -->
 
 <template>
-	<PropertySelect
-		:prop-model="propModel"
+	<PropertySelect :prop-model="propModel"
 		:is-read-only="false"
 		:value="null"
 		:show-icon="showIcon"
@@ -39,7 +38,7 @@ import {
 	getAmountHoursMinutesAndUnitForAllDayEvents,
 } from '../../../utils/alarms.js'
 import alarmFormat from '../../../filters/alarmFormat.js'
-import PropertySelect from '../Properties/PropertySelect'
+import PropertySelect from '../Properties/PropertySelect.vue'
 
 export default {
 	name: 'AlarmListNew',

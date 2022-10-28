@@ -2,7 +2,7 @@
   - @copyright Copyright (c) 2019 Georg Ehrke <oc.list@georgehrke.com>
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -20,29 +20,19 @@
   -->
 
 <template>
-	<AppNavigationItem
-		v-click-outside="closeShareMenu"
+	<AppNavigationItem v-click-outside="closeShareMenu"
 		:loading="calendar.loading"
+		:aria-description="descriptionAppNavigationItem"
 		:title="calendar.displayName || $t('calendar', 'Untitled calendar')"
 		:class="{deleted: !!deleteTimeout, disabled: !calendar.enabled, 'open-sharing': shareMenuOpen}"
 		@click.prevent.stop="toggleEnabled">
 		<template slot="icon">
-			<Actions>
-				<ActionButton @click.prevent.stop="toggleEnabled">
-					<template #icon>
-						<CheckboxBlankCircle
-							v-if="calendar.enabled"
-							:title="$t('calendar', 'Disable calendar')"
-							:size="20"
-							:fill-color="calendar.color" />
-						<CheckboxBlankCircleOutline
-							v-else
-							:title="$t('calendar', 'Enable calendar')"
-							:size="20"
-							:fill-color="calendar.color" />
-					</template>
-				</ActionButton>
-			</Actions>
+			<CheckboxBlankCircle v-if="calendar.enabled"
+				:size="20"
+				:fill-color="calendar.color" />
+			<CheckboxBlankCircleOutline v-else
+				:size="20"
+				:fill-color="calendar.color" />
 		</template>
 
 		<template v-if="!deleteTimeout" slot="counter">
@@ -62,38 +52,33 @@
 		</template>
 
 		<template v-if="!deleteTimeout" slot="actions">
-			<ActionButton
-				v-if="showRenameLabel"
+			<ActionButton v-if="showRenameLabel"
 				@click.prevent.stop="openRenameInput">
 				<template #icon>
 					<Pencil :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Edit name') }}
 			</ActionButton>
-			<ActionInput
-				v-if="showRenameInput"
+			<ActionInput v-if="showRenameInput"
 				:value="calendar.displayName"
 				@submit.prevent.stop="saveRenameInput">
 				<template #icon>
 					<Pencil :size="20" decorative />
 				</template>
 			</ActionInput>
-			<ActionText
-				v-if="showRenameSaving"
+			<ActionText v-if="showRenameSaving"
 				icon="icon-loading-small">
 				<!-- eslint-disable-next-line no-irregular-whitespace -->
 				{{ $t('calendar', 'Saving name …') }}
 			</ActionText>
-			<ActionButton
-				v-if="showColorLabel"
+			<ActionButton v-if="showColorLabel"
 				@click.prevent.stop="openColorInput">
 				<template #icon>
 					<Pencil :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Edit color') }}
 			</ActionButton>
-			<ActionInput
-				v-if="showColorInput"
+			<ActionInput v-if="showColorInput"
 				:value="calendar.color"
 				type="color"
 				@submit.prevent.stop="saveColorInput">
@@ -101,37 +86,32 @@
 					<Pencil :size="20" decorative />
 				</template>
 			</ActionInput>
-			<ActionText
-				v-if="showColorSaving"
+			<ActionText v-if="showColorSaving"
 				icon="icon-loading-small">
 				<!-- eslint-disable-next-line no-irregular-whitespace -->
 				{{ $t('calendar', 'Saving color …') }}
 			</ActionText>
-			<ActionButton
-				@click.stop.prevent="copyLink">
+			<ActionButton @click.stop.prevent="copyLink">
 				<template #icon>
 					<LinkVariant :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Copy private link') }}
 			</ActionButton>
-			<ActionLink
-				target="_blank"
+			<ActionLink target="_blank"
 				:href="downloadUrl">
 				<template #icon>
 					<Download :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Export') }}
 			</ActionLink>
-			<ActionButton
-				v-if="calendar.isSharedWithMe"
+			<ActionButton v-if="calendar.isSharedWithMe"
 				@click.prevent.stop="deleteCalendar">
 				<template #icon>
 					<Close :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Unshare from me') }}
 			</ActionButton>
-			<ActionButton
-				v-if="!calendar.isSharedWithMe"
+			<ActionButton v-if="!calendar.isSharedWithMe"
 				@click.prevent.stop="deleteCalendar">
 				<template #icon>
 					<Delete :size="20" decorative />
@@ -141,16 +121,14 @@
 		</template>
 
 		<template v-if="!!deleteTimeout" slot="actions">
-			<ActionButton
-				v-if="calendar.isSharedWithMe"
+			<ActionButton v-if="calendar.isSharedWithMe"
 				@click.prevent.stop="cancelDeleteCalendar">
 				<template #icon>
 					<Undo :size="20" decorative />
 				</template>
 				{{ $n('calendar', 'Unsharing the calendar in {countdown} second', 'Unsharing the calendar in {countdown} seconds', countdown, { countdown }) }}
 			</ActionButton>
-			<ActionButton
-				v-else
+			<ActionButton v-else
 				@click.prevent.stop="cancelDeleteCalendar">
 				<template #icon>
 					<Undo :size="20" decorative />
@@ -174,13 +152,13 @@
 </template>
 
 <script>
-import Avatar from '@nextcloud/vue/dist/Components/Avatar'
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import ActionInput from '@nextcloud/vue/dist/Components/ActionInput'
-import ActionLink from '@nextcloud/vue/dist/Components/ActionLink'
-import ActionText from '@nextcloud/vue/dist/Components/ActionText'
-import AppNavigationItem from '@nextcloud/vue/dist/Components/AppNavigationItem'
+import Avatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import ActionInput from '@nextcloud/vue/dist/Components/NcActionInput.js'
+import ActionLink from '@nextcloud/vue/dist/Components/NcActionLink.js'
+import ActionText from '@nextcloud/vue/dist/Components/NcActionText.js'
+import AppNavigationItem from '@nextcloud/vue/dist/Components/NcAppNavigationItem.js'
 import ClickOutside from 'vue-click-outside'
 import {
 	showInfo,
@@ -342,6 +320,22 @@ export default {
 
 			return ''
 		},
+		/**
+		 * compute aria-description for AppNavigationItem link
+		 *
+		 * @return {string}
+		 */
+		descriptionAppNavigationItem() {
+			if (this.calendar.enabled && this.calendar.displayName) {
+				return t('calendar', 'Disable calendar "{calendar}"', { calendar: this.calendar.displayName })
+			} else if (this.calendar.enabled && !this.calendar.displayName) {
+				return t('calendar', 'Disable untitled calendar')
+			} else if (!this.calendar.enabled && this.calendar.displayName) {
+				return t('calendar', 'Enable calendar "{calendar}"', { calendar: this.calendar.displayName })
+			} else {
+				return t('calendar', 'Enable untitled calendar')
+			}
+		},
 	},
 	methods: {
 		/**
@@ -430,7 +424,7 @@ export default {
 			// TODO - use menuOpen to keep it open instead of toast
 
 			try {
-				await this.$copyText(url)
+				await navigator.clipboard.writeText(url)
 				showSuccess(this.$t('calendar', 'Calendar link copied to clipboard.'))
 			} catch (error) {
 				console.debug(error)

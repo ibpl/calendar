@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -26,8 +26,7 @@
 			{{ $t('calendar', 'on') }}
 		</span>
 		<div class="repeat-option-set-section__grid">
-			<button
-				v-for="option in options"
+			<button v-for="option in options"
 				:key="option.value"
 				class="repeat-option-set-section-grid-item"
 				:class="{ primary: option.selected }"

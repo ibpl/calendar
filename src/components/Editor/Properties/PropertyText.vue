@@ -4,7 +4,7 @@
   - @author Georg Ehrke <oc.list@georgehrke.com>
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -23,18 +23,15 @@
 
 <template>
 	<div v-if="display" class="property-text">
-		<component
-			:is="icon"
+		<component :is="icon"
 			:size="20"
 			:title="readableName"
 			class="property-text__icon"
 			:class="{ 'property-text__icon--hidden': !showIcon }" />
 
-		<div
-			class="property-text__input"
+		<div class="property-text__input"
 			:class="{ 'property-text__input--readonly': isReadOnly }">
-			<textarea
-				v-if="!isReadOnly"
+			<textarea v-if="!isReadOnly"
 				v-autosize="true"
 				:placeholder="placeholder"
 				:rows="rows"
@@ -42,17 +39,14 @@
 				:value="value"
 				@input.prevent.stop="changeValue" />
 			<!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
-			<div
-				v-else
+			<div v-else
 				v-linkify="{ text: value, linkify: true }" />
 		</div>
 
-		<div
-			v-if="hasInfo"
+		<div v-if="hasInfo"
 			v-tooltip="info"
 			class="property-select__info">
-			<InformationVariant
-				:size="20"
+			<InformationVariant :size="20"
 				decorative />
 		</div>
 	</div>
@@ -60,8 +54,8 @@
 
 <script>
 import autosize from '../../../directives/autosize.js'
-import PropertyMixin from '../../../mixins/PropertyMixin'
-import linkify from '@nextcloud/vue/dist/Directives/Linkify'
+import PropertyMixin from '../../../mixins/PropertyMixin.js'
+import linkify from '@nextcloud/vue/dist/Directives/Linkify.js'
 
 import InformationVariant from 'vue-material-design-icons/InformationVariant.vue'
 

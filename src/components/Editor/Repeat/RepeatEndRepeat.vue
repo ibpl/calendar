@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -23,8 +23,7 @@
 <template>
 	<div class="repeat-option-set repeat-option-set--end">
 		<span class="repeat-option-end__label">{{ $t('calendar', 'End repeat') }}</span>
-		<Multiselect
-			class="repeat-option-end__end-type-select"
+		<Multiselect class="repeat-option-end__end-type-select"
 			:options="options"
 			:searchable="false"
 			:allow-empty="false"
@@ -33,23 +32,20 @@
 			track-by="value"
 			label="label"
 			@select="changeEndType" />
-		<DatePicker
-			v-if="isUntil"
+		<DatePicker v-if="isUntil"
 			class="repeat-option-end__until"
 			:min="minimumDate"
 			:date="until"
 			:is-all-day="true"
 			@change="changeUntil" />
-		<input
-			v-if="isCount"
+		<input v-if="isCount"
 			class="repeat-option-end__count"
 			type="number"
 			min="1"
 			max="3500"
 			:value="count"
 			@input="changeCount">
-		<span
-			v-if="isCount"
+		<span v-if="isCount"
 			class="repeat-option-end__count">
 			{{ occurrencesLabel }}
 		</span>
@@ -58,7 +54,7 @@
 
 <script>
 import DatePicker from '../../Shared/DatePicker.vue'
-import Multiselect from '@nextcloud/vue/dist/Components/Multiselect'
+import Multiselect from '@nextcloud/vue/dist/Components/NcMultiselect.js'
 
 export default {
 	name: 'RepeatEndRepeat',

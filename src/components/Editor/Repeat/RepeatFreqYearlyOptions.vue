@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -24,8 +24,7 @@
 	<div class="repeat-option-set repeat-option-set--yearly">
 		<div class="repeat-option-set-section">
 			<div class="repeat-option-set-section__grid">
-				<button
-					v-for="option in options"
+				<button v-for="option in options"
 					:key="option.value"
 					class="repeat-option-set-section-grid-item"
 					:class="{ primary: option.selected }"
@@ -35,18 +34,15 @@
 			</div>
 		</div>
 		<div class="repeat-option-set-section repeat-option-set-section--on-the-select">
-			<ActionCheckbox
-				class="repeat-option-set-section__title"
+			<ActionCheckbox class="repeat-option-set-section__title"
 				:checked="isBySetPositionEnabled"
 				@change="toggleBySetPosition">
 				{{ $t('calendar', 'On the') }}
 			</ActionCheckbox>
-			<RepeatFirstLastSelect
-				:by-set-position="bySetPosition"
+			<RepeatFirstLastSelect :by-set-position="bySetPosition"
 				:disabled="!isBySetPositionEnabled"
 				@change="changeBySetPosition" />
-			<RepeatOnTheSelect
-				:by-day="byDay"
+			<RepeatOnTheSelect :by-day="byDay"
 				:disabled="!isBySetPositionEnabled"
 				@change="changeByDay" />
 		</div>
@@ -54,7 +50,7 @@
 </template>
 
 <script>
-import ActionCheckbox from '@nextcloud/vue/dist/Components/ActionCheckbox'
+import ActionCheckbox from '@nextcloud/vue/dist/Components/NcActionCheckbox.js'
 import RepeatFirstLastSelect from './RepeatFirstLastSelect.vue'
 import RepeatOnTheSelect from './RepeatOnTheSelect.vue'
 

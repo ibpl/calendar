@@ -2,8 +2,9 @@
   - @copyright Copyright (c) 2019 Georg Ehrke <oc.list@georgehrke.com>
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
+  - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,8 +23,7 @@
 
 <template>
 	<div class="invitees-list-item">
-		<AvatarParticipationStatus
-			:attendee-is-organizer="false"
+		<AvatarParticipationStatus :attendee-is-organizer="false"
 			:is-viewed-by-organizer="isViewedByOrganizer"
 			:is-resource="false"
 			:avatar-link="avatarLink"
@@ -35,39 +35,33 @@
 		</div>
 		<div class="invitees-list-item__actions">
 			<Actions v-if="isViewedByOrganizer">
-				<ActionCheckbox
-					:checked="attendee.rsvp"
+				<ActionCheckbox :checked="attendee.rsvp"
 					@change="toggleRSVP">
 					{{ $t('calendar', 'Send email') }}
 				</ActionCheckbox>
 
-				<ActionRadio
-					:name="radioName"
+				<ActionRadio :name="radioName"
 					:checked="isChair"
 					@change="changeRole('CHAIR')">
 					{{ $t('calendar', 'Chairperson') }}
 				</ActionRadio>
-				<ActionRadio
-					:name="radioName"
+				<ActionRadio :name="radioName"
 					:checked="isRequiredParticipant"
 					@change="changeRole('REQ-PARTICIPANT')">
 					{{ $t('calendar', 'Required participant') }}
 				</ActionRadio>
-				<ActionRadio
-					:name="radioName"
+				<ActionRadio :name="radioName"
 					:checked="isOptionalParticipant"
 					@change="changeRole('OPT-PARTICIPANT')">
 					{{ $t('calendar', 'Optional participant') }}
 				</ActionRadio>
-				<ActionRadio
-					:name="radioName"
+				<ActionRadio :name="radioName"
 					:checked="isNonParticipant"
 					@change="changeRole('NON-PARTICIPANT')">
 					{{ $t('calendar', 'Non-participant') }}
 				</ActionRadio>
 
-				<ActionButton
-					@click="removeAttendee">
+				<ActionButton @click="removeAttendee">
 					<template #icon>
 						<Delete :size="20" decorative />
 					</template>
@@ -79,12 +73,12 @@
 </template>
 
 <script>
-import AvatarParticipationStatus from '../AvatarParticipationStatus'
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import ActionRadio from '@nextcloud/vue/dist/Components/ActionRadio'
-import ActionCheckbox from '@nextcloud/vue/dist/Components/ActionCheckbox'
-import { removeMailtoPrefix } from '../../../utils/attendee'
+import AvatarParticipationStatus from '../AvatarParticipationStatus.vue'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import ActionRadio from '@nextcloud/vue/dist/Components/NcActionRadio.js'
+import ActionCheckbox from '@nextcloud/vue/dist/Components/NcActionCheckbox.js'
+import { removeMailtoPrefix } from '../../../utils/attendee.js'
 
 import Delete from 'vue-material-design-icons/Delete.vue'
 
@@ -113,10 +107,18 @@ export default {
 		},
 	},
 	computed: {
+		/**
+		 * @return {string}
+		 */
 		avatarLink() {
 			// return this.$store.getters.getAvatarForContact(this.uri) || this.commonName
 			return this.commonName
 		},
+		/**
+		 * Common name of the organizer or the uri without the 'mailto:' prefix.
+		 *
+		 * @return {string}
+		 */
 		commonName() {
 			if (this.attendee.commonName) {
 				return this.attendee.commonName
@@ -126,7 +128,7 @@ export default {
 				return removeMailtoPrefix(this.attendee.uri)
 			}
 
-			return this.attendee.uri
+			return ''
 		},
 		radioName() {
 			return this._uid + '-role-radio-input-group'
@@ -181,6 +183,9 @@ export default {
 <style lang="scss" scoped>
 .invitees-list-item__displayname {
 	margin-bottom: 17px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
 }
 
 .avatar-participation-status {

@@ -3,7 +3,7 @@
   -
   - @author 2021 Christoph Wurst <christoph@winzerhof-wurst.at>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -28,25 +28,19 @@
 		</template>
 		<template #extra>
 			<Modal v-if="showModal"
+				size="large"
 				@close="showModal = false">
 				<div class="modal__content">
 					<h2>{{ t('calendar', 'Trash bin') }}</h2>
-					<EmptyContent
-						v-if="loading"
+					<EmptyContent v-if="loading"
 						icon="icon-loading"
-						class="modal__content__loading">
-						<template #desc>
-							{{ t('calendar', 'Loading deleted elements.') }}
-						</template>
-					</EmptyContent>
-					<EmptyContent
-						v-else-if="!items.length"
-						class="modal__content__empty">
+						class="modal__content__loading"
+						:description="t('calendar', 'Loading deleted items.')" />
+					<EmptyContent v-else-if="!items.length"
+						class="modal__content__empty"
+						:description="t('calendar', 'You do not have any deleted items.')">
 						<template #icon>
 							<Delete :size="20" decorative />
-						</template>
-						<template #desc>
-							{{ t('calendar', 'You do not have any deleted elements.') }}
 						</template>
 					</EmptyContent>
 					<template v-else>
@@ -64,13 +58,14 @@
 								<td>
 									<div class="item">
 										<div>
-											<div
-												class="color-dot"
+											<div class="color-dot"
 												:style="{ 'background-color': item.color }" />
 										</div>
 
 										<div>
-											<div>{{ item.name }}</div>
+											<div class="item-name">
+												{{ item.name }}
+											</div>
 											<div v-if="item.subline" class="item-subline">
 												{{ item.subline }}
 											</div>
@@ -80,14 +75,13 @@
 								<td class="deletedAt">
 									<Moment class="timestamp" :timestamp="item.deletedAt" />
 								</td>
-								<td>
+								<td class="item-actions">
 									<button @click="restore(item)">
 										{{ t('calendar','Restore') }}
 									</button>
 
 									<Actions :force-menu="true">
-										<ActionButton
-											@click="onDeletePermanently(item)">
+										<ActionButton @click="onDeletePermanently(item)">
 											<template #icon>
 												<Delete :size="20" decorative />
 											</template>
@@ -99,7 +93,7 @@
 						</table>
 						<div class="footer">
 							<p v-if="retentionDuration">
-								{{ n('calendar', 'Elements in the trash bin are deleted after {numDays} day', 'Elements in the trash bin are deleted after {numDays} days', retentionDuration, { numDays: retentionDuration }) }}
+								{{ n('calendar', 'Items in the trash bin are deleted after {numDays} day', 'Items in the trash bin are deleted after {numDays} days', retentionDuration, { numDays: retentionDuration }) }}
 							</p>
 							<button @click="onEmptyTrashBin()">
 								{{ t('calendar','Empty trash bin') }}
@@ -113,17 +107,17 @@
 </template>
 
 <script>
-import AppNavigationItem from '@nextcloud/vue/dist/Components/AppNavigationItem'
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import Modal from '@nextcloud/vue/dist/Components/Modal'
-import EmptyContent from '@nextcloud/vue/dist/Components/EmptyContent'
+import AppNavigationItem from '@nextcloud/vue/dist/Components/NcAppNavigationItem.js'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import Modal from '@nextcloud/vue/dist/Components/NcModal.js'
+import EmptyContent from '@nextcloud/vue/dist/Components/NcEmptyContent.js'
 import moment from '@nextcloud/moment'
-import logger from '../../../utils/logger'
+import logger from '../../../utils/logger.js'
 import { showError } from '@nextcloud/dialogs'
 import { mapGetters } from 'vuex'
-import Moment from './Moment'
-import { uidToHexColor } from '../../../utils/color'
+import Moment from './Moment.vue'
+import { uidToHexColor } from '../../../utils/color.js'
 
 import Delete from 'vue-material-design-icons/Delete.vue'
 
@@ -145,9 +139,10 @@ export default {
 		}
 	},
 	computed: {
-		...mapGetters([
-			'trashBin',
-		]),
+		...mapGetters({
+			trashBin: 'trashBin',
+			timezoneObject: 'getResolvedTimezoneObject',
+		}),
 		calendars() {
 			return this.$store.getters.sortedDeletedCalendars
 		},
@@ -165,7 +160,7 @@ export default {
 				color: calendar.color ?? uidToHexColor(calendar.displayname),
 			}))
 			const formattedCalendarObjects = this.objects.map(vobject => {
-				let eventSummary = t('calendar', 'Untitled element')
+				let eventSummary = t('calendar', 'Untitled item')
 				try {
 					eventSummary = vobject?.calendarComponent.getComponentIterator().next().value?.title
 				} catch (e) {
@@ -174,10 +169,11 @@ export default {
 				let subline = vobject.calendar?.displayName || t('calendar', 'Unknown calendar')
 				if (vobject.isEvent) {
 					const event = vobject?.calendarComponent.getFirstComponent('VEVENT')
+					const utcOffset = (event?.startDate.getInTimezone(this.timezoneObject).utcOffset() ?? 0) / 60
 					if (event?.startDate.jsDate && event?.isAllDay()) {
-						subline += ' · ' + moment(event.startDate.jsDate).format('LL')
+						subline += ' · ' + moment(event.startDate.jsDate).utcOffset(utcOffset).format('LL')
 					} else if (event?.startDate.jsDate) {
-						subline += ' · ' + moment(event?.startDate.jsDate).format('LLL')
+						subline += ' · ' + moment(event?.startDate.jsDate).utcOffset(utcOffset).format('LLL')
 					}
 				}
 				const color = vobject.calendarComponent.getComponentIterator().next().value?.color
@@ -285,7 +281,6 @@ export default {
 
 <style lang="scss" scoped>
 .modal__content {
-	max-width: 40vw;
 	margin: 2vw;
 
 	&__loading,
@@ -311,17 +306,20 @@ th {
 	color: var(--color-text-maxcontrast)
 }
 
-.name {
-	// Take remaining width to prevent whitespace on the right side
-	width: 100vw;
-}
-
 .item {
 	display: flex;
+
+	.item-name {
+		white-space: normal;
+	}
 
 	.item-subline {
 		color: var(--color-text-maxcontrast)
 	}
+}
+
+.item-actions {
+	text-align: right;
 }
 
 .deletedAt {

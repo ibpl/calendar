@@ -3,7 +3,7 @@
   -
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -24,16 +24,14 @@
 	<div class="checked-duration-select">
 		<div class="checked-duration-select__checkbox-row">
 			<div class="checked-duration-select__checkbox-row__input-wrapper">
-				<input
-					:id="id"
+				<input :id="id"
 					:checked="enabled"
 					type="checkbox"
 					@input="$emit('update:enabled', $event.target.checked)">
 			</div>
 			<label :for="id">{{ label }}</label>
 		</div>
-		<DurationSelect
-			class="checked-duration-select__duration"
+		<DurationSelect class="checked-duration-select__duration"
 			:allow-zero="defaultValue === 0"
 			:disabled="!enabled"
 			:value="valueOrDefault"
@@ -44,8 +42,8 @@
 </template>
 
 <script>
-import DurationSelect from './DurationSelect'
-import { randomId } from '../../utils/randomId'
+import DurationSelect from './DurationSelect.vue'
+import { randomId } from '../../utils/randomId.js'
 
 export default {
 	name: 'CheckedDurationSelect',

@@ -13,23 +13,21 @@
 				<template #icon>
 					<Download :size="20" decorative />
 				</template>
-				<ActionLink
-					v-for="calendar in subscriptions"
+				<ActionLink v-for="calendar in subscriptions"
 					:key="calendar.id"
 					target="_blank"
 					:href="calendar.url + '?export'">
 					<template #icon>
 						<Download :size="20" decorative />
 					</template>
-					{{ $t('calendar', 'Download {name}', { name: calendar.displayName || $t('calendar', 'Untitled calendar') }) }}
+					{{ $t('calendar', 'Export {name}', { name: calendar.displayName || $t('calendar', 'Untitled calendar') }) }}
 				</ActionLink>
 			</Actions>
 			<Actions>
 				<template #icon>
 					<CalendarBlank :size="20" decorative />
 				</template>
-				<ActionButton
-					v-for="calendar in subscriptions"
+				<ActionButton v-for="calendar in subscriptions"
 					:key="calendar.id"
 					@click.prevent.stop="copySubscriptionLink(calendar)">
 					<template #icon>
@@ -43,9 +41,9 @@
 </template>
 
 <script>
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import ActionLink from '@nextcloud/vue/dist/Components/ActionLink'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import ActionLink from '@nextcloud/vue/dist/Components/NcActionLink.js'
 import {
 	mapGetters,
 } from 'vuex'
@@ -88,7 +86,7 @@ export default {
 
 			// copy link for calendar to clipboard
 			try {
-				await this.$copyText(url)
+				await navigator.clipboard.writeText(url)
 				showSuccess(this.$t('calendar', 'Calendar link copied to clipboard.'))
 			} catch (error) {
 				console.debug(error)

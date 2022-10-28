@@ -2,7 +2,7 @@
   - @copyright Copyright (c) 2019 Georg Ehrke <oc.list@georgehrke.com>
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -20,20 +20,17 @@
   -->
 
 <template>
-	<AppNavigationItem
-		:title="$t('calendar', 'Share link')"
+	<AppNavigationItem :title="$t('calendar', 'Share link')"
 		:menu-open.sync="menuOpen">
 		<template slot="icon">
-			<LinkVariant
-				:class="{published: isPublished}"
+			<LinkVariant :class="{published: isPublished}"
 				:size="18"
 				decorative
 				class="avatar" />
 		</template>
 
 		<template v-if="!isPublished" slot="actions">
-			<ActionButton
-				v-if="!publishingCalendar"
+			<ActionButton v-if="!publishingCalendar"
 				key="publish"
 				@click.prevent.stop="publishCalendar">
 				<template #icon>
@@ -41,8 +38,7 @@
 				</template>
 				{{ $t('calendar', 'Publish calendar') }}
 			</ActionButton>
-			<ActionButton
-				v-else
+			<ActionButton v-else
 				key="publishing"
 				icon="icon-loading-small"
 				:disabled="true">
@@ -52,8 +48,7 @@
 
 		<template v-if="isPublished" slot="counter">
 			<Actions>
-				<ActionButton
-					@click.prevent.stop="copyPublicLink">
+				<ActionButton @click.prevent.stop="copyPublicLink">
 					<template #icon>
 						<ClipboardArrowLeftOutline :size="20" decorative />
 					</template>
@@ -62,98 +57,84 @@
 			</Actions>
 		</template>
 		<template v-if="isPublished" slot="actions">
-			<ActionButton
-				v-if="showEMailLabel"
+			<ActionButton v-if="showEMailLabel"
 				@click.prevent.stop="openEMailLinkInput">
 				<template #icon>
 					<Email :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Send link to calendar via email') }}
 			</ActionButton>
-			<ActionInput
-				v-if="showEMailInput"
+			<ActionInput v-if="showEMailInput"
 				@submit.prevent.stop="sendLinkViaEMail">
 				<template #icon>
 					<Email :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Enter one address') }}
 			</ActionInput>
-			<ActionText
-				v-if="showEMailSending"
+			<ActionText v-if="showEMailSending"
 				icon="icon-loading-small">
 				<!-- eslint-disable-next-line no-irregular-whitespace -->
 				{{ $t('calendar', 'Sending email …') }}
 			</ActionText>
 
-			<ActionButton
-				v-if="showCopySubscriptionLinkLabel"
+			<ActionButton v-if="showCopySubscriptionLinkLabel"
 				@click.prevent.stop="copySubscriptionLink">
 				<template #icon>
 					<CalendarBlank :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Copy subscription link') }}
 			</ActionButton>
-			<ActionText
-				v-if="showCopySubscriptionLinkSpinner"
+			<ActionText v-if="showCopySubscriptionLinkSpinner"
 				icon="icon-loading-small">
 				<!-- eslint-disable-next-line no-irregular-whitespace -->
 				{{ $t('calendar', 'Copying link …') }}
 			</ActionText>
-			<ActionText
-				v-if="showCopySubscriptionLinkSuccess"
-				icon="icon-calendar-dark">
+			<ActionText v-if="showCopySubscriptionLinkSuccess">
 				<template #icon>
 					<CalendarBlank :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Copied link') }}
 			</ActionText>
-			<ActionText
-				v-if="showCopySubscriptionLinkError">
+			<ActionText v-if="showCopySubscriptionLinkError">
 				<template #icon>
 					<CalendarBlank :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Could not copy link') }}
 			</ActionText>
 
-			<ActionButton
-				v-if="showCopyEmbedCodeLinkLabel"
+			<ActionButton v-if="showCopyEmbedCodeLinkLabel"
 				@click.prevent.stop="copyEmbedCode">
 				<template #icon>
 					<CodeBrackets :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Copy embedding code') }}
 			</ActionButton>
-			<ActionText
-				v-if="showCopyEmbedCodeLinkSpinner"
+			<ActionText v-if="showCopyEmbedCodeLinkSpinner"
 				icon="icon-loading-small">
 				<!-- eslint-disable-next-line no-irregular-whitespace -->
 				{{ $t('calendar', 'Copying code …') }}
 			</ActionText>
-			<ActionText
-				v-if="showCopyEmbedCodeLinkSuccess">
+			<ActionText v-if="showCopyEmbedCodeLinkSuccess">
 				<template #icon>
 					<CodeBrackets :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Copied code') }}
 			</ActionText>
-			<ActionText
-				v-if="showCopyEmbedCodeLinkError">
+			<ActionText v-if="showCopyEmbedCodeLinkError">
 				<template #icon>
 					<CodeBrackets :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Could not copy code') }}
 			</ActionText>
 
-			<ActionButton
-				v-if="!unpublishingCalendar"
+			<ActionButton v-if="!unpublishingCalendar"
 				@click.prevent.stop="unpublishCalendar">
 				<template #icon>
 					<Delete :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Delete share link') }}
 			</ActionButton>
-			<ActionText
-				v-if="unpublishingCalendar"
+			<ActionText v-if="unpublishingCalendar"
 				icon="icon-loading-small">
 				<!-- eslint-disable-next-line no-irregular-whitespace -->
 				{{ $t('calendar', 'Deleting share link …') }}
@@ -163,11 +144,11 @@
 </template>
 
 <script>
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import ActionInput from '@nextcloud/vue/dist/Components/ActionInput'
-import ActionText from '@nextcloud/vue/dist/Components/ActionText'
-import AppNavigationItem from '@nextcloud/vue/dist/Components/AppNavigationItem'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import ActionInput from '@nextcloud/vue/dist/Components/NcActionInput.js'
+import ActionText from '@nextcloud/vue/dist/Components/NcActionText.js'
+import AppNavigationItem from '@nextcloud/vue/dist/Components/NcAppNavigationItem.js'
 import ClickOutside from 'vue-click-outside'
 import {
 	generateRemoteUrl,
@@ -298,7 +279,7 @@ export default {
 
 			// copy link for calendar to clipboard
 			try {
-				await this.$copyText(url)
+				await navigator.clipboard.writeText(url)
 				showSuccess(this.$t('calendar', 'Calendar link copied to clipboard.'))
 			} catch (error) {
 				console.debug(error)
@@ -320,7 +301,7 @@ export default {
 
 			// copy link for calendar to clipboard
 			try {
-				await this.$copyText(url)
+				await navigator.clipboard.writeText(url)
 				this.menuOpen = true
 				this.showCopySubscriptionLinkLabel = false
 				this.showCopySubscriptionLinkSpinner = false

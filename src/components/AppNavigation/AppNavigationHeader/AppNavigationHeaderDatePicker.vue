@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,36 +22,36 @@
 
 <template>
 	<div class="datepicker-button-section">
-		<button
-			v-shortkey="previousShortKeyConf"
+		<button v-shortkey="previousShortKeyConf"
 			:aria-label="previousLabel"
-			class="datepicker-button-section__previous button icon icon-leftarrow"
+			class="datepicker-button-section__previous button"
 			:title="previousLabel"
 			type="button"
 			@click="navigateToPreviousTimeRange"
-			@shortkey="navigateToPreviousTimeRange" />
-		<button
-			class="datepicker-button-section__datepicker-label button datepicker-label"
+			@shortkey="navigateToPreviousTimeRange">
+			<ChevronLeftIcon :size="22" />
+		</button>
+		<button class="datepicker-button-section__datepicker-label button datepicker-label"
 			@click.stop.prevent="toggleDatepicker"
 			@mousedown.stop.prevent="doNothing"
 			@mouseup.stop.prevent="doNothing">
 			{{ selectedDate | formatDateRage(view, locale) }}
 		</button>
-		<DatePicker
-			ref="datepicker"
+		<DatePicker ref="datepicker"
 			class="datepicker-button-section__datepicker"
 			:date="selectedDate"
 			:is-all-day="true"
 			:open.sync="isDatepickerOpen"
 			@change="navigateToDate" />
-		<button
-			v-shortkey="nextShortKeyConf"
+		<button v-shortkey="nextShortKeyConf"
 			:aria-label="nextLabel"
-			class="datepicker-button-section__next button icon icon-rightarrow"
+			class="datepicker-button-section__next button"
 			:title="nextLabel"
 			type="button"
 			@click="navigateToNextTimeRange"
-			@shortkey="navigateToNextTimeRange" />
+			@shortkey="navigateToNextTimeRange">
+			<ChevronRightIcon :size="22" />
+		</button>
 	</div>
 </template>
 
@@ -64,11 +64,15 @@ import {
 import { mapState } from 'vuex'
 import formatDateRage from '../../../filters/dateRangeFormat.js'
 import DatePicker from '../../Shared/DatePicker.vue'
+import ChevronLeftIcon from 'vue-material-design-icons/ChevronLeft.vue'
+import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 
 export default {
 	name: 'AppNavigationHeaderDatePicker',
 	components: {
 		DatePicker,
+		ChevronLeftIcon,
+		ChevronRightIcon,
 	},
 	filters: {
 		formatDateRage,

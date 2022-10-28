@@ -2,7 +2,7 @@
   - @copyright Copyright (c) 2019 Georg Ehrke <oc.list@georgehrke.com>
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -20,57 +20,49 @@
   -->
 
 <template>
-	<AppNavigationItem
-		:loading="calendar.loading"
+	<AppNavigationItem :loading="calendar.loading"
 		:title="calendar.displayName || $t('calendar', 'Untitled calendar')"
 		:menu-open.sync="menuOpen"
 		@click.prevent.stop="toggleEnabled">
-		<AppNavigationIconBullet
-			v-if="calendar.enabled"
+		<AppNavigationIconBullet v-if="calendar.enabled"
 			slot="icon"
 			:color="calendar.color"
 			@click.prevent.stop="toggleEnabled" />
 
 		<template slot="counter">
-			<Avatar
-				:user="owner"
+			<Avatar :user="owner"
 				:is-guest="true"
 				:disable-tooltip="true"
 				:disable-menu="true" />
 		</template>
 
 		<template slot="actions">
-			<ActionButton
-				v-if="showCopySubscriptionLinkLabel"
+			<ActionButton v-if="showCopySubscriptionLinkLabel"
 				@click.prevent.stop="copySubscriptionLink">
 				<template #icon>
 					<LinkVariant :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Copy subscription link') }}
 			</ActionButton>
-			<ActionText
-				v-if="showCopySubscriptionLinkSpinner"
+			<ActionText v-if="showCopySubscriptionLinkSpinner"
 				icon="icon-loading-small">
 				<!-- eslint-disable-next-line no-irregular-whitespace -->
 				{{ $t('calendar', 'Copying link …') }}
 			</ActionText>
-			<ActionText
-				v-if="showCopySubscriptionLinkSuccess">
+			<ActionText v-if="showCopySubscriptionLinkSuccess">
 				<template #icon>
 					<LinkVariant :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Copied link') }}
 			</ActionText>
-			<ActionText
-				v-if="showCopySubscriptionLinkError">
+			<ActionText v-if="showCopySubscriptionLinkError">
 				<template #icon>
 					<LinkVariant :size="20" decorative />
 				</template>
 				{{ $t('calendar', 'Could not copy link') }}
 			</ActionText>
 
-			<ActionLink
-				target="_blank"
+			<ActionLink target="_blank"
 				:href="downloadUrl">
 				<template #icon>
 					<Download :size="20" decorative />
@@ -82,12 +74,12 @@
 </template>
 
 <script>
-import Avatar from '@nextcloud/vue/dist/Components/Avatar'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import ActionLink from '@nextcloud/vue/dist/Components/ActionLink'
-import ActionText from '@nextcloud/vue/dist/Components/ActionText'
-import AppNavigationIconBullet from '@nextcloud/vue/dist/Components/AppNavigationIconBullet'
-import AppNavigationItem from '@nextcloud/vue/dist/Components/AppNavigationItem'
+import Avatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import ActionLink from '@nextcloud/vue/dist/Components/NcActionLink.js'
+import ActionText from '@nextcloud/vue/dist/Components/NcActionText.js'
+import AppNavigationIconBullet from '@nextcloud/vue/dist/Components/NcAppNavigationIconBullet.js'
+import AppNavigationItem from '@nextcloud/vue/dist/Components/NcAppNavigationItem.js'
 import {
 	generateRemoteUrl,
 } from '@nextcloud/router'
@@ -172,7 +164,7 @@ export default {
 
 			// copy link for calendar to clipboard
 			try {
-				await this.$copyText(url)
+				await navigator.clipboard.writeText(url)
 				this.menuOpen = true
 				this.showCopySubscriptionLinkLabel = false
 				this.showCopySubscriptionLinkSpinner = false

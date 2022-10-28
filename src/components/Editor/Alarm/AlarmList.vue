@@ -4,7 +4,7 @@
   - @author Georg Ehrke <oc.list@georgehrke.com>
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -24,16 +24,14 @@
 <template>
 	<div class="property-alarm-list">
 		<!-- TODO: probably not use index here for the key -->
-		<AlarmListItem
-			v-for="(alarm, index) in alarms"
+		<AlarmListItem v-for="(alarm, index) in alarms"
 			:key="index"
 			:alarm="alarm"
 			:calendar-object-instance="calendarObjectInstance"
 			:is-read-only="isReadOnly"
 			:show-icon="index === 0"
 			@remove-alarm="removeAlarm" />
-		<AlarmListNew
-			v-if="!isReadOnly"
+		<AlarmListNew v-if="!isReadOnly"
 			:is-all-day="calendarObjectInstance.isAllDay"
 			:show-icon="alarms.length === 0"
 			@add-alarm="addAlarm" />
@@ -41,8 +39,8 @@
 </template>
 
 <script>
-import AlarmListNew from './AlarmListNew'
-import AlarmListItem from './AlarmListItem'
+import AlarmListNew from './AlarmListNew.vue'
+import AlarmListItem from './AlarmListItem.vue'
 import { mapState } from 'vuex'
 
 export default {

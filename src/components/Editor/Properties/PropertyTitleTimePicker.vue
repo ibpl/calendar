@@ -5,7 +5,7 @@
   - @author Georg Ehrke <oc.list@georgehrke.com>
   - @author Jakob Röhrl <jakob.roehrl@web.de>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -24,11 +24,9 @@
 
 <template>
 	<div class="property-title-time-picker">
-		<div
-			v-if="!isReadOnly"
+		<div v-if="!isReadOnly"
 			class="property-title-time-picker__time-pickers">
-			<DatePicker
-				:date="startDate"
+			<DatePicker :date="startDate"
 				:timezone-id="startTimezone"
 				prefix="from"
 				:is-all-day="isAllDay"
@@ -37,8 +35,7 @@
 				@change="changeStart"
 				@change-timezone="changeStartTimezone" />
 
-			<DatePicker
-				:date="endDate"
+			<DatePicker :date="endDate"
 				:timezone-id="endTimezone"
 				prefix="to"
 				:is-all-day="isAllDay"
@@ -47,41 +44,36 @@
 				@change="changeEnd"
 				@change-timezone="changeEndTimezone" />
 		</div>
-		<div
-			v-if="isReadOnly"
+		<div v-if="isReadOnly"
 			class="property-title-time-picker__time-pickers property-title-time-picker__time-pickers--readonly">
 			<div class="property-title-time-picker-read-only-wrapper">
 				<div class="property-title-time-picker-read-only-wrapper__label">
 					{{ formattedStart }}
 				</div>
-				<div
-					v-if="!isAllDay"
-					v-tooltip="startTimezone"
-					class="property-title-time-picker-read-only-wrapper__icon icon icon-timezone"
-					:class="{ 'property-title-time-picker-read-only-wrapper__icon--highlighted': highlightStartTimezone } " />
+				<IconTimezone v-if="!isAllDay"
+					:title="endTimezone"
+					:class="{ 'highlighted-timezone-icon': highlightStartTimezone }"
+					:size="20" />
 			</div>
 			<div class="property-title-time-picker-read-only-wrapper">
 				<div class="property-title-time-picker-read-only-wrapper__label">
 					{{ formattedEnd }}
 				</div>
-				<div
-					v-if="!isAllDay"
-					v-tooltip="endTimezone"
-					class="property-title-time-picker-read-only-wrapper__icon icon icon-timezone"
-					:class="{ 'property-title-time-picker-read-only-wrapper__icon--highlighted': highlightEndTimezone }" />
+				<IconTimezone v-if="!isAllDay"
+					:title="endTimezone"
+					:class="{ 'highlighted-timezone-icon': highlightStartTimezone }"
+					:size="20" />
 			</div>
 		</div>
 
 		<div v-if="!isReadOnly" class="property-title-time-picker__all-day">
-			<input
-				id="allDay"
+			<input id="allDay"
 				:checked="isAllDay"
 				type="checkbox"
 				class="checkbox"
 				:disabled="!canModifyAllDay"
 				@change="toggleAllDay">
-			<label
-				v-tooltip="allDayTooltip"
+			<label v-tooltip="allDayTooltip"
 				for="allDay">
 				{{ $t('calendar', 'All day') }}
 			</label>
@@ -92,12 +84,14 @@
 <script>
 import moment from '@nextcloud/moment'
 import DatePicker from '../../Shared/DatePicker.vue'
+import IconTimezone from 'vue-material-design-icons/Web.vue'
 import { mapState } from 'vuex'
 
 export default {
 	name: 'PropertyTitleTimePicker',
 	components: {
 		DatePicker,
+		IconTimezone,
 	},
 	props: {
 		/**

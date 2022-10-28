@@ -20,17 +20,19 @@
  *
  */
 import { enableBirthdayCalendar } from '../services/caldavService.js'
-import { mapDavCollectionToCalendar } from '../models/calendar'
-import { detectTimezone } from '../services/timezoneDetectionService'
+import { mapDavCollectionToCalendar } from '../models/calendar.js'
+import { detectTimezone } from '../services/timezoneDetectionService.js'
 import { setConfig as setCalendarJsConfig } from '@nextcloud/calendar-js'
 import { setConfig } from '../services/settings.js'
 import { logInfo } from '../utils/logger.js'
+import getTimezoneManager from '../services/timezoneDataProviderService.js'
 
 const state = {
 	// env
 	appVersion: null,
 	firstRun: null,
 	talkEnabled: false,
+	disableAppointments: false,
 	// user-defined calendar settings
 	eventLimit: null,
 	showTasks: null,
@@ -146,8 +148,9 @@ const mutations = {
 	 * @param {string} data.timezone The timezone to view the calendar in. Either an Olsen timezone or "automatic"
 	 * @param {boolean} data.hideEventExport
 	 * @param {string} data.forceEventAlarmType
+	 * @param {boolean} data.disableAppointments Allow to disable the appointments feature
 	 */
-	loadSettingsFromServer(state, { appVersion, eventLimit, firstRun, showWeekNumbers, showTasks, showWeekends, skipPopover, slotDuration, defaultReminder, talkEnabled, tasksEnabled, timezone, hideEventExport, forceEventAlarmType }) {
+	loadSettingsFromServer(state, { appVersion, eventLimit, firstRun, showWeekNumbers, showTasks, showWeekends, skipPopover, slotDuration, defaultReminder, talkEnabled, tasksEnabled, timezone, hideEventExport, forceEventAlarmType, disableAppointments }) {
 		logInfo(`
 Initial settings:
 	- AppVersion: ${appVersion}
@@ -164,6 +167,7 @@ Initial settings:
 	- Timezone: ${timezone}
 	- HideEventExport: ${hideEventExport}
 	- ForceEventAlarmType: ${forceEventAlarmType}
+	- disableAppointments: ${disableAppointments}
 `)
 
 		state.appVersion = appVersion
@@ -180,6 +184,7 @@ Initial settings:
 		state.timezone = timezone
 		state.hideEventExport = hideEventExport
 		state.forceEventAlarmType = forceEventAlarmType
+		state.disableAppointments = disableAppointments
 	},
 
 	/**
@@ -209,6 +214,23 @@ const getters = {
 	getResolvedTimezone: (state) => state.timezone === 'automatic'
 		? detectTimezone()
 		: state.timezone,
+
+	/**
+	 * Gets the resolved timezone object.
+	 * Falls back to UTC if timezone is invalid.
+	 *
+	 * @param {object} state The Vuex state
+	 * @param {object} getters The vuex getters
+	 * @return {object} The calendar-js timezone object
+	 */
+	getResolvedTimezoneObject: (state, getters) => {
+		const timezone = getters.getResolvedTimezone
+		let timezoneObject = getTimezoneManager().getTimezoneForId(timezone)
+		if (!timezoneObject) {
+			timezoneObject = getTimezoneManager().getTimezoneForId('UTC')
+		}
+		return timezoneObject
+	},
 }
 
 const actions = {

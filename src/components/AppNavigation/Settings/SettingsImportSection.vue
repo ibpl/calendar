@@ -2,7 +2,7 @@
   - @copyright Copyright (c) 2019 Georg Ehrke <oc.list@georgehrke.com>
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -21,8 +21,7 @@
 
 <template>
 	<li v-if="showProgressBar" class="settings-fieldset-interior-item">
-		<progress
-			class="settings-fieldset-interior-item__progressbar"
+		<progress class="settings-fieldset-interior-item__progressbar"
 			:value="imported"
 			:max="total" />
 	</li>
@@ -31,8 +30,7 @@
 			<Upload :size="20" decorative />
 			{{ $n('calendar', 'Import calendar', 'Import calendars', 1) }}
 		</label>
-		<input
-			:id="inputUid"
+		<input :id="inputUid"
 			ref="importInput"
 			class="hidden"
 			type="file"
@@ -41,8 +39,7 @@
 			multiple
 			@change="processFiles">
 
-		<ImportScreen
-			v-if="showImportModal"
+		<ImportScreen v-if="showImportModal"
 			:files="files"
 			@cancel-import="cancelImport"
 			@import-calendar="importCalendar" />
@@ -169,12 +166,10 @@ export default {
 				const size = file.size
 				let type = file.type
 
-				// Handle cases where we are running inside a browser on Windows
-				//
+				// Developers are advised not to rely on the type as a sole validation scheme.
 				// https://developer.mozilla.org/en-US/docs/Web/API/File/type
-				// "Uncommon" file-extensions will result in an empty type
-				// and apparently Microsoft considers calendar files to be "uncommon"
-				if (type === '') {
+				if (!this.supportedFileTypes.includes(type)) {
+					// Try to guess file type based on its extension.
 					// If it's an xml file, our best guess is xCal: https://tools.ietf.org/html/rfc6321
 					// If it's a json file, our best guess is jCal: https://tools.ietf.org/html/rfc7265
 					// In every other case, our best guess is just plain old iCalendar: https://tools.ietf.org/html/rfc5545
@@ -187,15 +182,6 @@ export default {
 					} else {
 						type = 'text/calendar'
 					}
-				}
-
-				// Make sure the user didn't select
-				// files of a different file-type
-				if (!this.supportedFileTypes.includes(type)) {
-					showError(this.$t('calendar', '{filename} is an unsupported file-type', {
-						filename: name,
-					}))
-					continue
 				}
 
 				// Use custom-options for parser.

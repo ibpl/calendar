@@ -21,7 +21,7 @@
  *
  */
 
-import { getRFCProperties } from '../models/rfcProps'
+import { getRFCProperties } from '../models/rfcProps.js'
 import logger from '../utils/logger.js'
 import { getIllustrationForTitle } from '../utils/illustration.js'
 import { getPrefixedRoute } from '../utils/router.js'
@@ -32,7 +32,7 @@ import {
 	mapState,
 } from 'vuex'
 import { translate as t } from '@nextcloud/l10n'
-import { removeMailtoPrefix } from '../utils/attendee'
+import { removeMailtoPrefix } from '../utils/attendee.js'
 
 /**
  * This is a mixin for the editor. It contains common Vue stuff, that is
@@ -429,6 +429,29 @@ export default {
 			this.requiresActionOnRouteLeave = false
 			this.closeEditor()
 		},
+		keyboardCloseEditor(event) {
+			if (event.key === 'Escape') {
+				this.cancel()
+			}
+		},
+		keyboardSaveEvent(event) {
+			if (event.key === 'Enter' && event.ctrlKey === true && !this.isReadOnly && !this.canCreateRecurrenceException) {
+				this.saveAndLeave(false)
+			}
+		},
+		keyboardDeleteEvent(event) {
+			if (event.key === 'Delete' && event.ctrlKey === true && this.canDelete && !this.canCreateRecurrenceException) {
+				this.deleteAndLeave(false)
+			}
+		},
+		keyboardDuplicateEvent(event) {
+			if (event.key === 'd' && event.ctrlKey === true) {
+				event.preventDefault()
+				if (!this.isNew && !this.isReadOnly && !this.canCreateRecurrenceException) {
+					this.duplicateEvent()
+				}
+			}
+		},
 		/**
 		 * Saves a calendar-object
 		 *
@@ -465,6 +488,16 @@ export default {
 			this.requiresActionOnRouteLeave = false
 			this.closeEditor()
 		},
+
+		/**
+		 * Duplicates a calendar-object and saves it
+		 *
+		 * @return {Promise<void>}
+		 */
+		async duplicateEvent() {
+			await this.$store.dispatch('duplicateCalendarObjectInstance')
+		},
+
 		/**
 		 * Deletes a calendar-object
 		 *

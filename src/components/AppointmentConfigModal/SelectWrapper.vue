@@ -3,7 +3,7 @@
   -
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -23,12 +23,10 @@
 <template>
 	<div>
 		<label v-if="label" :for="id">{{ label }}</label>
-		<select
-			:id="id"
+		<select :id="id"
 			:disabled="disabled"
 			@change="onSelect">
-			<option
-				v-for="option in options"
+			<option v-for="option in options"
 				:key="option.value"
 				:value="option.value"
 				v-bind="{ selected: option.value === value }">
@@ -39,10 +37,10 @@
 </template>
 
 <script>
-import { randomId } from '../../utils/randomId'
+import { randomId } from '../../utils/randomId.js'
 
 export default {
-	name: 'Select',
+	name: 'SelectWrapper',
 	props: {
 		label: {
 			type: String,

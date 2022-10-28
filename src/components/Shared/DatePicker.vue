@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -21,8 +21,7 @@
   -->
 
 <template>
-	<DatetimePicker
-		:lang="lang"
+	<DatetimePicker :lang="lang"
 		:first-day-of-week="firstDay"
 		:format="'YYYY-MM-DD HH:mm'"
 		:formatter="formatter"
@@ -37,52 +36,57 @@
 		:use12h="showAmPm"
 		:append-to-body="appendToBody"
 		v-bind="$attrs"
+		confirm
 		v-on="$listeners"
 		@close="close"
 		@change="change"
 		@pick="pickDate">
 		<template #icon-calendar>
-			<button
-				class="datetime-picker-inline-icon icon"
-				:class="{'icon-timezone': !isAllDay, 'icon-new-calendar': isAllDay, 'datetime-picker-inline-icon--highlighted': highlightTimezone}"
+			<NcButton type="tertiary-no-background"
 				@click.stop.prevent="toggleTimezonePopover"
-				@mousedown.stop.prevent="() => {}" />
-			<Popover
-				:open.sync="showTimezonePopover"
+				@mousedown.stop.prevent="() => {}">
+				<template #icon>
+					<IconNewCalendar v-if="isAllDay"
+						:size="20" />
+					<IconTimezone v-else
+						:class="{ 'highlighted-timezone-icon': highlightTimezone }"
+						:size="20" />
+				</template>
+			</NcButton>
+			<Popover :open.sync="showTimezonePopover"
 				open-class="timezone-popover-wrapper">
 				<div class="timezone-popover-wrapper__title">
 					<strong>
 						{{ $t('calendar', 'Please select a time zone:') }}
 					</strong>
 				</div>
-				<TimezonePicker
-					class="timezone-popover-wrapper__timezone-select"
+				<TimezonePicker class="timezone-popover-wrapper__timezone-select"
 					:value="timezoneId"
 					@input="changeTimezone" />
 			</Popover>
 		</template>
-		<template
-			v-if="!isAllDay"
+		<template v-if="!isAllDay"
 			#footer>
-			<button
-				v-if="!showTimePanel"
+			<NcButton v-if="!showTimePanel"
 				class="mx-btn mx-btn-text"
 				@click="toggleTimePanel">
 				{{ $t('calendar', 'Pick a time') }}
-			</button>
-			<button
-				v-else
+			</NcButton>
+			<NcButton v-else
 				class="mx-btn mx-btn-text"
 				@click="toggleTimePanel">
 				{{ $t('calendar', 'Pick a date') }}
-			</button>
+			</NcButton>
 		</template>
 	</DatetimePicker>
 </template>
 
 <script>
-import DatetimePicker from '@nextcloud/vue/dist/Components/DatetimePicker'
-import Popover from '@nextcloud/vue/dist/Components/Popover'
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
+import DatetimePicker from '@nextcloud/vue/dist/Components/NcDatetimePicker.js'
+import IconTimezone from 'vue-material-design-icons/Web.vue'
+import IconNewCalendar from 'vue-material-design-icons/CalendarBlankOutline.vue'
+import Popover from '@nextcloud/vue/dist/Components/NcPopover.js'
 import {
 	getFirstDay,
 } from '@nextcloud/l10n'
@@ -92,15 +96,18 @@ import {
 	showError,
 } from '@nextcloud/dialogs'
 
-import TimezonePicker from '@nextcloud/vue/dist/Components/TimezonePicker'
+import TimezonePicker from '@nextcloud/vue/dist/Components/NcTimezonePicker.js'
 import { getLangConfigForVue2DatePicker } from '../../utils/localization.js'
 
 export default {
 	name: 'DatePicker',
 	components: {
+		NcButton,
 		DatetimePicker,
 		Popover,
 		TimezonePicker,
+	  IconTimezone,
+	  IconNewCalendar,
 	},
 	props: {
 		date: {
@@ -409,3 +416,11 @@ export default {
 	},
 }
 </script>
+<style lang="scss" scoped>
+.highlighted-timezone-icon {
+	opacity: .7;
+}
+::v-deep .mx-icon-calendar {
+	right: 0;
+}
+</style>

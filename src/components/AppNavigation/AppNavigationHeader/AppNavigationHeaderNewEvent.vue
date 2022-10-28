@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -21,8 +21,7 @@
   -->
 
 <template>
-	<button
-		v-shortkey="['c']"
+	<button v-shortkey="['c']"
 		class="button primary new-event"
 		@click="newEvent"
 		@shortkey="newEvent">
@@ -43,7 +42,7 @@ export default {
 		 * Opens the new event dialog
 		 */
 		newEvent() {
-			this.$router.push('/new')
+			this.$router.push(`/new/${this.$route.params.view}`)
 		},
 	},
 }

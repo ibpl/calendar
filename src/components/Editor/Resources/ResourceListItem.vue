@@ -3,7 +3,7 @@
   -
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,8 +22,7 @@
 
 <template>
 	<div class="resource-list-item">
-		<AvatarParticipationStatus
-			:attendee-is-organizer="false"
+		<AvatarParticipationStatus :attendee-is-organizer="false"
 			:is-viewed-by-organizer="isViewedByOrganizer"
 			:is-resource="true"
 			:is-suggestion="isSuggestion"
@@ -44,20 +43,15 @@
 				</ActionButton>
 			</actions>
 			<Actions v-else-if="isViewedByOrganizer">
-				<ActionCaption
-					v-if="seatingCapacity"
+				<ActionCaption v-if="seatingCapacity"
 					:title="seatingCapacity" />
-				<ActionCaption
-					v-if="roomType"
+				<ActionCaption v-if="roomType"
 					:title="roomType" />
-				<ActionCaption
-					v-if="hasProjector"
+				<ActionCaption v-if="hasProjector"
 					:title="$t('calendar', 'Has a projector')" />
-				<ActionCaption
-					v-if="hasWhiteboard"
+				<ActionCaption v-if="hasWhiteboard"
 					:title="$t('calendar', 'Has a whiteboard')" />
-				<ActionCaption
-					v-if="isAccessible"
+				<ActionCaption v-if="isAccessible"
 					:title="$t('calendar', 'Wheelchair accessible')" />
 				<ActionSeparator v-if="seatingCapacity || roomType || hasProjector || hasWhiteboard || isAccessible" />
 				<ActionButton @click="removeResource">
@@ -72,15 +66,15 @@
 </template>
 
 <script>
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import ActionCaption from '@nextcloud/vue/dist/Components/ActionCaption'
-import ActionSeparator from '@nextcloud/vue/dist/Components/ActionSeparator'
-import AvatarParticipationStatus from '../AvatarParticipationStatus'
-import { removeMailtoPrefix } from '../../../utils/attendee'
-import logger from '../../../utils/logger'
-import { principalPropertySearchByDisplaynameOrEmail } from '../../../services/caldavService'
-import { formatRoomType } from '../../../models/resourceProps'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import ActionCaption from '@nextcloud/vue/dist/Components/NcActionCaption.js'
+import ActionSeparator from '@nextcloud/vue/dist/Components/NcActionSeparator.js'
+import AvatarParticipationStatus from '../AvatarParticipationStatus.vue'
+import { removeMailtoPrefix } from '../../../utils/attendee.js'
+import logger from '../../../utils/logger.js'
+import { principalPropertySearchByDisplaynameOrEmail } from '../../../services/caldavService.js'
+import { formatRoomType } from '../../../models/resourceProps.js'
 
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -230,6 +224,9 @@ export default {
 <style lang="scss" scoped>
 .resource-list-item__displayname {
 	margin-bottom: 17px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
 }
 
 .avatar-participation-status {

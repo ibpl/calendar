@@ -3,7 +3,7 @@
   -
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -21,34 +21,29 @@
   -->
 
 <template>
-	<div
-		class="invitation-response-buttons"
+	<div class="invitation-response-buttons"
 		:class="{ 'invitation-response-buttons--narrow': narrow }">
-		<button
-			v-if="!isAccepted"
+		<button v-if="!isAccepted"
 			class="invitation-response-buttons__button primary"
 			:disabled="loading"
 			@click="accept">
 			{{ t('calendar', 'Accept') }}
 		</button>
-		<button
-			v-if="!isDeclined"
+		<button v-if="!isDeclined"
 			class="invitation-response-buttons__button error"
 			:disabled="loading"
 			@click="decline">
 			{{ t('calendar', 'Decline') }}
 		</button>
 		<template v-if="!isTentative">
-			<button
-				v-if="!narrow"
+			<button v-if="!narrow"
 				class="invitation-response-buttons__button"
 				:disabled="loading"
 				@click="tentative">
 				{{ t('calendar', 'Tentative') }}
 			</button>
 			<Actions v-else>
-				<ActionButton
-					:disabled="loading"
+				<ActionButton :disabled="loading"
 					@click="tentative">
 					<template #icon>
 						<CalendarQuestionIcon :size="20" />
@@ -61,11 +56,11 @@
 </template>
 
 <script>
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import CalendarQuestionIcon from 'vue-material-design-icons/CalendarQuestion.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import logger from '../../utils/logger'
+import logger from '../../utils/logger.js'
 
 export default {
 	name: 'InvitationResponseButtons',

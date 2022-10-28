@@ -3,7 +3,7 @@
   -
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -24,8 +24,7 @@
 	<div class="duration-input">
 		<label :for="id">{{ label }}</label>
 		<div class="input">
-			<input
-				:id="id"
+			<input :id="id"
 				v-model="internalValue"
 				type="text"
 				@input="change"
@@ -36,7 +35,7 @@
 </template>
 
 <script>
-import { randomId } from '../../utils/randomId'
+import { randomId } from '../../utils/randomId.js'
 
 export default {
 	name: 'DurationInput',

@@ -120,9 +120,14 @@ class BookingService {
 			throw new ClientException('Could not make sense of booking times');
 		}
 
-		$this->calendarWriter->write($config, $startObj, $booking->getDisplayName(), $booking->getEmail(), $booking->getDescription());
+		$calendar = $this->calendarWriter->write($config, $startObj, $booking->getDisplayName(), $booking->getEmail(), $booking->getDescription());
 		$booking->setConfirmed(true);
 		$this->bookingMapper->update($booking);
+		try {
+			$this->mailService->sendBookingInformationEmail($booking, $config, $calendar);
+		} catch (ServiceException $e) {
+			$this->logger->info('Could not send booking information email after confirmation by user ' . $booking->getEmail(), ['exception' => $e]);
+		}
 
 		$this->eventDispatcher->dispatchTyped(
 			new AppointmentBookedEvent(
@@ -135,9 +140,9 @@ class BookingService {
 	}
 
 	/**
-	 * @throws ClientException|ServiceException|DbException
+	 * @throws ServiceException|DbException|NoSlotFoundException|InvalidArgumentException
 	 */
-	public function book(AppointmentConfig $config,int $start, int $end, string $timeZone, string $displayName, string $email, ?string $description = null): Booking {
+	public function book(AppointmentConfig $config, int $start, int $end, string $timeZone, string $displayName, string $email, ?string $description = null): Booking {
 		$bookingSlot = current($this->getAvailableSlots($config, $start, $end));
 
 		if (!$bookingSlot) {

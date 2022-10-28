@@ -6,7 +6,7 @@
   - @author Jakob Röhrl <jakob.roehrl@web.de>
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -24,8 +24,7 @@
   -->
 
 <template>
-	<AppSidebar
-		:title="title"
+	<AppSidebar :title="title"
 		:title-editable="!isReadOnly && !isLoading"
 		:title-placeholder="$t('calendar', 'Event title')"
 		:subtitle="subTitle"
@@ -40,13 +39,9 @@
 		</template>
 
 		<template v-else-if="isError">
-			<EmptyContent>
-				{{ $t('calendar', 'Event does not exist') }}
+			<EmptyContent :title="$t('calendar', 'Event does not exist')" :description="error">
 				<template #icon>
 					<CalendarBlank :size="20" decorative />
-				</template>
-				<template #desc>
-					{{ error }}
 				</template>
 			</EmptyContent>
 		</template>
@@ -55,8 +50,7 @@
 			<IllustrationHeader :color="illustrationColor" :illustration-url="backgroundImage" />
 		</template>
 
-		<template
-			v-if="!isLoading && !isError"
+		<template v-if="!isLoading && !isError && !isNew"
 			#secondary-actions>
 			<ActionLink v-if="!hideEventExport && hasDownloadURL"
 				:href="downloadURL">
@@ -65,6 +59,12 @@
 				</template>
 				{{ $t('calendar', 'Export') }}
 			</ActionLink>
+			<ActionButton v-if="!canCreateRecurrenceException && !isReadOnly" @click="duplicateEvent()">
+				<template #icon>
+					<ContentDuplicate :size="20" decorative />
+				</template>
+				{{ $t('calendar', 'Duplicate') }}
+			</ActionButton>
 			<ActionButton v-if="canDelete && !canCreateRecurrenceException" @click="deleteAndLeave(false)">
 				<template #icon>
 					<Delete :size="20" decorative />
@@ -85,18 +85,15 @@
 			</ActionButton>
 		</template>
 
-		<template
-			v-if="!isLoading && !isError"
+		<template v-if="!isLoading && !isError"
 			#description>
-			<PropertyCalendarPicker
-				v-if="showCalendarPicker"
+			<PropertyCalendarPicker v-if="showCalendarPicker"
 				:calendars="calendars"
 				:calendar="selectedCalendar"
 				:is-read-only="isReadOnly || !canModifyCalendar"
 				@select-calendar="changeCalendar" />
 
-			<PropertyTitleTimePicker
-				:start-date="startDate"
+			<PropertyTitleTimePicker :start-date="startDate"
 				:start-timezone="startTimezone"
 				:end-date="endDate"
 				:end-timezone="endTimezone"
@@ -111,16 +108,14 @@
 				@update-end-timezone="updateEndTimezone"
 				@toggle-all-day="toggleAllDay" />
 
-			<InvitationResponseButtons
-				v-if="isViewedByAttendee && userAsAttendee"
+			<InvitationResponseButtons v-if="isViewedByAttendee && userAsAttendee && !isReadOnly"
 				:attendee="userAsAttendee"
 				:calendar-id="calendarId"
 				:narrow="true"
 				@close="closeEditorAndSkipAction" />
 		</template>
 
-		<AppSidebarTab
-			v-if="!isLoading && !isError"
+		<AppSidebarTab v-if="!isLoading && !isError"
 			id="app-sidebar-tab-details"
 			class="app-sidebar-tab"
 			:name="$t('calendar', 'Details')"
@@ -129,64 +124,54 @@
 				<InformationOutline :size="20" decorative />
 			</template>
 			<div class="app-sidebar-tab__content">
-				<PropertyText
-					:is-read-only="isReadOnly"
+				<PropertyText :is-read-only="isReadOnly"
 					:prop-model="rfcProps.location"
 					:value="location"
 					@update:value="updateLocation" />
-				<PropertyText
-					:is-read-only="isReadOnly"
+				<PropertyText :is-read-only="isReadOnly"
 					:prop-model="rfcProps.description"
 					:value="description"
 					@update:value="updateDescription" />
 
-				<PropertySelect
-					:is-read-only="isReadOnly"
+				<PropertySelect :is-read-only="isReadOnly"
 					:prop-model="rfcProps.status"
 					:value="status"
 					@update:value="updateStatus" />
-				<PropertySelect
-					:is-read-only="isReadOnly"
+				<PropertySelect :is-read-only="isReadOnly"
 					:prop-model="rfcProps.accessClass"
 					:value="accessClass"
 					@update:value="updateAccessClass" />
-				<PropertySelect
-					:is-read-only="isReadOnly"
+				<PropertySelect :is-read-only="isReadOnly"
 					:prop-model="rfcProps.timeTransparency"
 					:value="timeTransparency"
 					@update:value="updateTimeTransparency" />
 
-				<PropertySelectMultiple
-					:colored-options="true"
+				<PropertySelectMultiple :colored-options="true"
 					:is-read-only="isReadOnly"
 					:prop-model="rfcProps.categories"
 					:value="categories"
 					@add-single-value="addCategory"
 					@remove-single-value="removeCategory" />
 
-				<PropertyColor
-					:calendar-color="selectedCalendarColor"
+				<PropertyColor :calendar-color="selectedCalendarColor"
 					:is-read-only="isReadOnly"
 					:prop-model="rfcProps.color"
 					:value="color"
 					@update:value="updateColor" />
 
-				<AlarmList
-					:calendar-object-instance="calendarObjectInstance"
+				<AlarmList :calendar-object-instance="calendarObjectInstance"
 					:is-read-only="isReadOnly" />
 
 				<!-- TODO: If not editing the master item, force updating this and all future   -->
 				<!-- TODO: You can't edit recurrence-rule of no-range recurrence-exception -->
-				<Repeat
-					:calendar-object-instance="calendarObjectInstance"
+				<Repeat :calendar-object-instance="calendarObjectInstance"
 					:recurrence-rule="calendarObjectInstance.recurrenceRule"
 					:is-read-only="isReadOnly"
 					:is-editing-master-item="isEditingMasterItem"
 					:is-recurrence-exception="isRecurrenceException"
 					@force-this-and-all-future="forceModifyingFuture" />
 			</div>
-			<SaveButtons
-				v-if="showSaveButtons"
+			<SaveButtons v-if="showSaveButtons"
 				class="app-sidebar-tab__buttons"
 				:can-create-recurrence-exception="canCreateRecurrenceException"
 				:is-new="isNew"
@@ -194,8 +179,7 @@
 				@save-this-only="saveAndLeave(false)"
 				@save-this-and-all-future="saveAndLeave(true)" />
 		</AppSidebarTab>
-		<AppSidebarTab
-			v-if="!isLoading && !isError"
+		<AppSidebarTab v-if="!isLoading && !isError"
 			id="app-sidebar-tab-attendees"
 			class="app-sidebar-tab"
 			:name="$t('calendar', 'Attendees')"
@@ -204,13 +188,11 @@
 				<AccountMultiple :size="20" decorative />
 			</template>
 			<div class="app-sidebar-tab__content">
-				<InviteesList
-					v-if="!isLoading"
+				<InviteesList v-if="!isLoading"
 					:calendar-object-instance="calendarObjectInstance"
 					:is-read-only="isReadOnly" />
 			</div>
-			<SaveButtons
-				v-if="showSaveButtons"
+			<SaveButtons v-if="showSaveButtons"
 				class="app-sidebar-tab__buttons"
 				:can-create-recurrence-exception="canCreateRecurrenceException"
 				:is-new="isNew"
@@ -218,8 +200,7 @@
 				@save-this-only="saveAndLeave(false)"
 				@save-this-and-all-future="saveAndLeave(true)" />
 		</AppSidebarTab>
-		<AppSidebarTab
-			v-if="!isLoading && !isError"
+		<AppSidebarTab v-if="!isLoading && !isError"
 			id="app-sidebar-tab-resources"
 			class="app-sidebar-tab"
 			:name="$t('calendar', 'Resources')"
@@ -228,13 +209,11 @@
 				<MapMarker :size="20" decorative />
 			</template>
 			<div class="app-sidebar-tab__content">
-				<ResourceList
-					v-if="!isLoading"
+				<ResourceList v-if="!isLoading"
 					:calendar-object-instance="calendarObjectInstance"
 					:is-read-only="isReadOnly" />
 			</div>
-			<SaveButtons
-				v-if="showSaveButtons"
+			<SaveButtons v-if="showSaveButtons"
 				class="app-sidebar-tab__buttons"
 				:can-create-recurrence-exception="canCreateRecurrenceException"
 				:is-new="isNew"
@@ -245,36 +224,37 @@
 	</AppSidebar>
 </template>
 <script>
-import AppSidebar from '@nextcloud/vue/dist/Components/AppSidebar'
-import AppSidebarTab from '@nextcloud/vue/dist/Components/AppSidebarTab'
-import ActionLink from '@nextcloud/vue/dist/Components/ActionLink'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import EmptyContent from '@nextcloud/vue/dist/Components/EmptyContent'
+import AppSidebar from '@nextcloud/vue/dist/Components/NcAppSidebar.js'
+import AppSidebarTab from '@nextcloud/vue/dist/Components/NcAppSidebarTab.js'
+import ActionLink from '@nextcloud/vue/dist/Components/NcActionLink.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import EmptyContent from '@nextcloud/vue/dist/Components/NcEmptyContent.js'
 
 import { mapState } from 'vuex'
 
-import AlarmList from '../components/Editor/Alarm/AlarmList'
+import AlarmList from '../components/Editor/Alarm/AlarmList.vue'
 
-import InviteesList from '../components/Editor/Invitees/InviteesList'
-import PropertyCalendarPicker from '../components/Editor/Properties/PropertyCalendarPicker'
-import PropertySelect from '../components/Editor/Properties/PropertySelect'
-import PropertyText from '../components/Editor/Properties/PropertyText'
-import PropertyTitleTimePicker from '../components/Editor/Properties/PropertyTitleTimePicker'
+import InviteesList from '../components/Editor/Invitees/InviteesList.vue'
+import PropertyCalendarPicker from '../components/Editor/Properties/PropertyCalendarPicker.vue'
+import PropertySelect from '../components/Editor/Properties/PropertySelect.vue'
+import PropertyText from '../components/Editor/Properties/PropertyText.vue'
+import PropertyTitleTimePicker from '../components/Editor/Properties/PropertyTitleTimePicker.vue'
 import Repeat from '../components/Editor/Repeat/Repeat.vue'
 
-import EditorMixin from '../mixins/EditorMixin'
+import EditorMixin from '../mixins/EditorMixin.js'
 import IllustrationHeader from '../components/Editor/IllustrationHeader.vue'
 import moment from '@nextcloud/moment'
 import SaveButtons from '../components/Editor/SaveButtons.vue'
 import PropertySelectMultiple from '../components/Editor/Properties/PropertySelectMultiple.vue'
 import PropertyColor from '../components/Editor/Properties/PropertyColor.vue'
-import ResourceList from '../components/Editor/Resources/ResourceList'
-import InvitationResponseButtons from '../components/Editor/InvitationResponseButtons'
+import ResourceList from '../components/Editor/Resources/ResourceList.vue'
+import InvitationResponseButtons from '../components/Editor/InvitationResponseButtons.vue'
 
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import CalendarBlank from 'vue-material-design-icons/CalendarBlank.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
 import MapMarker from 'vue-material-design-icons/MapMarker.vue'
 
@@ -302,6 +282,7 @@ export default {
 		CalendarBlank,
 		Delete,
 		Download,
+		ContentDuplicate,
 		InformationOutline,
 		MapMarker,
 		InvitationResponseButtons,
@@ -344,6 +325,18 @@ export default {
 
 			return !eventComponent.isPartOfRecurrenceSet() || eventComponent.isExactForkOfPrimary
 		},
+	},
+	mounted() {
+		window.addEventListener('keydown', this.keyboardCloseEditor)
+		window.addEventListener('keydown', this.keyboardSaveEvent)
+		window.addEventListener('keydown', this.keyboardDeleteEvent)
+		window.addEventListener('keydown', this.keyboardDuplicateEvent)
+	},
+	beforeDestroy() {
+		window.removeEventListener('keydown', this.keyboardCloseEditor)
+		window.removeEventListener('keydown', this.keyboardSaveEvent)
+		window.removeEventListener('keydown', this.keyboardDeleteEvent)
+		window.removeEventListener('keydown', this.keyboardDuplicateEvent)
 	},
 	methods: {
 		/**

@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,11 +22,9 @@
 
 <template>
 	<div class="property-title">
-		<div
-			class="property-title__input"
+		<div class="property-title__input"
 			:class="{ 'property-title__input--readonly': isReadOnly }">
-			<input
-				v-if="!isReadOnly"
+			<input v-if="!isReadOnly"
 				v-focus
 				type="text"
 				:placeholder="t('calendar', 'Event title')"

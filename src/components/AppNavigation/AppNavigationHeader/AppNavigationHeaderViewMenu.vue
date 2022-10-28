@@ -2,7 +2,7 @@
   - @copyright Copyright (c) 2019 Georg Ehrke <oc.list@georgehrke.com>
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -20,15 +20,13 @@
   -->
 
 <template>
-	<Actions
-		v-shortkey="shortKeyConf"
+	<Actions v-shortkey="shortKeyConf"
 		menu-align="right"
 		@shortkey.native="selectViewFromShortcut">
 		<template #icon>
 			<component :is="defaultIcon" :size="20" decorative />
 		</template>
-		<ActionButton
-			v-for="view in views"
+		<ActionButton v-for="view in views"
 			:key="view.id"
 			:icon="view.icon"
 			@click="selectView(view.id)">
@@ -41,8 +39,8 @@
 </template>
 
 <script>
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 
 import ViewDay from 'vue-material-design-icons/ViewDay.vue'
 import ViewGrid from 'vue-material-design-icons/ViewGrid.vue'

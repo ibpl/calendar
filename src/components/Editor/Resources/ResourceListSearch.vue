@@ -3,7 +3,7 @@
   -
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,8 +22,7 @@
 
 <template>
 	<div class="resource-search">
-		<Multiselect
-			class="resource-search__multiselect"
+		<Multiselect class="resource-search__multiselect"
 			:options="matches"
 			:searchable="true"
 			:internal-search="false"
@@ -39,14 +38,12 @@
 			@select="addResource">
 			<template #option="{ option }">
 				<div class="resource-search-list-item">
-					<Avatar
-						:disable-tooltip="true"
+					<Avatar :disable-tooltip="true"
 						:display-name="option.displayName" />
 					<div class="resource-search-list-item__label resource-search-list-item__label--single-email">
 						<div>
 							{{ option.displayName }}
-							<span
-								v-if="!isAvailable"
+							<span v-if="!isAvailable"
 								class="resource-search-list-item__label__availability">
 								({{ formatAvailability(option.isAvailable) }})
 							</span>
@@ -59,12 +56,10 @@
 			</template>
 		</Multiselect>
 
-		<template v-if="hasAdvancedFilters">
+		<template>
 			<div class="resource-search__capacity">
 				<ResourceSeatingCapacity :value.sync="capacity" />
-				<Actions
-					v-if="hasAdvancedFilters"
-					class="resource-search__capacity__actions">
+				<Actions class="resource-search__capacity__actions">
 					<ActionCheckbox :checked.sync="isAvailable">
 						<!-- Translators room or resource is not yet booked -->
 						{{ $t('calendar', 'Available') }}
@@ -86,16 +81,16 @@
 </template>
 
 <script>
-import Avatar from '@nextcloud/vue/dist/Components/Avatar'
-import { checkResourceAvailability } from '../../../services/freeBusyService'
-import Multiselect from '@nextcloud/vue/dist/Components/Multiselect'
+import Avatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
+import { checkResourceAvailability } from '../../../services/freeBusyService.js'
+import Multiselect from '@nextcloud/vue/dist/Components/NcMultiselect.js'
 import debounce from 'debounce'
-import logger from '../../../utils/logger'
-import { advancedPrincipalPropertySearch } from '../../../services/caldavService'
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionCheckbox from '@nextcloud/vue/dist/Components/ActionCheckbox'
-import ResourceSeatingCapacity from './ResourceSeatingCapacity'
-import ResourceRoomType from './ResourceRoomType'
+import logger from '../../../utils/logger.js'
+import { advancedPrincipalPropertySearch } from '../../../services/caldavService.js'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionCheckbox from '@nextcloud/vue/dist/Components/NcActionCheckbox.js'
+import ResourceSeatingCapacity from './ResourceSeatingCapacity.vue'
+import ResourceRoomType from './ResourceRoomType.vue'
 
 export default {
 	name: 'ResourceListSearch',
@@ -137,10 +132,6 @@ export default {
 		noResult() {
 			return this.$t('calendar', 'No match found')
 		},
-		hasAdvancedFilters() {
-			// TODO: Remove me when Calendar doesn't support server < 23
-			return parseInt(OC.config.version.split('.')[0]) >= 23
-		},
 		features() {
 			const features = []
 			if (this.isAccessible) {
@@ -178,11 +169,9 @@ export default {
 			let results
 			try {
 				const query = { displayName: input }
-				if (this.hasAdvancedFilters) {
-					query.capacity = this.capacity
-					query.features = this.features
-					query.roomType = this.roomType
-				}
+				query.capacity = this.capacity
+				query.features = this.features
+				query.roomType = this.roomType
 				results = await advancedPrincipalPropertySearch(query)
 			} catch (error) {
 				logger.debug('Could not find resources', { error })
@@ -230,17 +219,15 @@ export default {
 				})
 
 			// Check resource availability
-			if (this.hasAdvancedFilters) {
-				await checkResourceAvailability(
-					options,
-					this.$store.getters.getCurrentUserPrincipalEmail,
-					this.calendarObjectInstance.eventComponent.startDate,
-					this.calendarObjectInstance.eventComponent.endDate,
-				)
-			}
+			await checkResourceAvailability(
+				options,
+				this.$store.getters.getCurrentUserPrincipalEmail,
+				this.calendarObjectInstance.eventComponent.startDate,
+				this.calendarObjectInstance.eventComponent.endDate,
+			)
 
 			// Filter by availability
-			if (this.hasAdvancedFilters && this.isAvailable) {
+			if (this.isAvailable) {
 				options = options.filter(option => option.isAvailable)
 			}
 

@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,31 +22,26 @@
 
 <template>
 	<div>
-		<button
-			v-if="showMoreButton"
+		<button v-if="showMoreButton"
 			@click="showMore">
 			{{ $t('calendar', 'More') }}
 		</button>
-		<button
-			v-if="showSaveButton"
+		<button v-if="showSaveButton"
 			class="primary"
 			@click="saveThisOnly">
 			{{ $t('calendar', 'Save') }}
 		</button>
-		<button
-			v-if="showUpdateButton"
+		<button v-if="showUpdateButton"
 			class="primary"
 			@click="saveThisOnly">
 			{{ $t('calendar', 'Update') }}
 		</button>
-		<button
-			v-if="showUpdateOnlyThisButton"
+		<button v-if="showUpdateOnlyThisButton"
 			class="primary"
 			@click="saveThisOnly">
 			{{ $t('calendar', 'Update this occurrence') }}
 		</button>
-		<button
-			v-if="showUpdateThisAndFutureButton"
+		<button v-if="showUpdateThisAndFutureButton"
 			:class="{ primary: forceThisAndAllFuture}"
 			@click="saveThisAndAllFuture">
 			{{ $t('calendar', 'Update this and all future') }}

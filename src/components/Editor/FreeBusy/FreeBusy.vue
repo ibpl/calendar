@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -21,16 +21,14 @@
   -->
 
 <template>
-	<Modal
-		size="large"
+	<Modal size="large"
 		:title="$t('calendar', 'Availability of attendees, resources and rooms')"
 		@close="$emit('close')">
 		<div class="modal__content modal--scheduler">
 			<div v-if="loadingIndicator" class="loading-indicator">
 				<div class="icon-loading" />
 			</div>
-			<FullCalendar
-				ref="freeBusyFullCalendar"
+			<FullCalendar ref="freeBusyFullCalendar"
 				:options="options" />
 			<div class="freebusy-caption">
 				<div class="freebusy-caption__calendar-user-types" />
@@ -64,7 +62,7 @@ import freeBusyResourceEventSource from '../../../fullcalendar/eventSources/free
 // Import localization plugins
 import { getDateFormattingConfig } from '../../../fullcalendar/localization/dateFormattingConfig.js'
 import { getFullCalendarLocale } from '../../../fullcalendar/localization/localeProvider.js'
-import MomentPlugin from '../../../fullcalendar/localization/momentPlugin.js'
+import momentPluginFactory from '../../../fullcalendar/localization/momentPlugin.js'
 
 // Import timezone plugins
 import VTimezoneNamedTimezone from '../../../fullcalendar/timezones/vtimezoneNamedTimezoneImpl.js'
@@ -73,8 +71,8 @@ import {
 	mapGetters,
 	mapState,
 } from 'vuex'
-import Modal from '@nextcloud/vue/dist/Components/Modal'
-import DatePicker from '../../Shared/DatePicker'
+import Modal from '@nextcloud/vue/dist/Components/NcModal.js'
+import DatePicker from '../../Shared/DatePicker.vue'
 import { getColorForFBType } from '../../../utils/freebusy.js'
 import { getLocale } from '@nextcloud/l10n'
 import { getFirstDayOfWeekFromMomentLocale } from '../../../utils/moment.js'
@@ -141,7 +139,7 @@ export default {
 		plugins() {
 			return [
 				resourceTimelinePlugin,
-				MomentPlugin,
+				momentPluginFactory(this.$store),
 				VTimezoneNamedTimezone,
 			]
 		},
@@ -294,11 +292,6 @@ export default {
 
 ::v-deep .mx-input{
 	height: 38px !important;
-}
-
-::v-deep .icon-new-calendar {
-	background-color: var(--color-main-background); border: none; padding: 6px; margin-top: 17px;
-	cursor: default;
 }
 </style>
 

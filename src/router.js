@@ -24,9 +24,9 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import { getRootUrl, generateUrl } from '@nextcloud/router'
 
-import Calendar from './views/Calendar'
-import EditSimple from './views/EditSimple'
-import EditSidebar from './views/EditSidebar'
+import Calendar from './views/Calendar.vue'
+import EditSimple from './views/EditSimple.vue'
+import EditSidebar from './views/EditSidebar.vue'
 import {
 	getDefaultEndDateForNewEvent,
 	getDefaultStartDateForNewEvent,
@@ -104,8 +104,8 @@ const router = new Router({
 			redirect: `/embed/:tokens/${getInitialView()}/now`,
 		},
 		{
-			path: '/new',
-			redirect: () => `/${getInitialView()}/now/new/${getPreferredEditorRoute()}/0/${getDefaultStartDateForNewEvent()}/${getDefaultEndDateForNewEvent()}`,
+			path: '/new/:view?',
+			redirect: (to) => `/${to.params.view ?? getInitialView()}/now/new/${getPreferredEditorRoute()}/0/${getDefaultStartDateForNewEvent()}/${getDefaultEndDateForNewEvent()}`,
 		},
 		{
 			path: '/new/:allDay/:dtstart/:dtend',

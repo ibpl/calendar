@@ -2,8 +2,9 @@
   - @copyright Copyright (c) 2020 Georg Ehrke <oc.list@georgehrke.com>
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
+  - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -21,8 +22,7 @@
   -->
 
 <template>
-	<FullCalendar
-		ref="fullCalendar"
+	<FullCalendar ref="fullCalendar"
 		:options="options" />
 </template>
 
@@ -49,7 +49,7 @@ import select from '../fullcalendar/interaction/select.js'
 // Import localization plugins
 import { getDateFormattingConfig } from '../fullcalendar/localization/dateFormattingConfig.js'
 import { getFullCalendarLocale } from '../fullcalendar/localization/localeProvider.js'
-import MomentPlugin from '../fullcalendar/localization/momentPlugin.js'
+import momentPluginFactory from '../fullcalendar/localization/momentPlugin.js'
 
 // Import rendering handlers
 import dayHeaderDidMount from '../fullcalendar/rendering/dayHeaderDidMount.js'
@@ -130,7 +130,8 @@ export default {
 				dayHeaderDidMount,
 				eventDidMount,
 				noEventsDidMount,
-				eventOrder: ['start', '-duration', 'allDay', eventOrder],
+				// FIXME: remove title if upstream is fixed (https://github.com/fullcalendar/fullcalendar/issues/6608#issuecomment-954241059)
+				eventOrder: (this.$route.params.view === 'timeGridWeek' ? ['title'] : []).concat(['start', '-duration', 'allDay', eventOrder]),
 				forceEventDuration: false,
 				headerToolbar: false,
 				height: '100%',
@@ -146,6 +147,8 @@ export default {
 				unselectAuto: false,
 				// Timezones:
 				timeZone: this.timezoneId,
+				// Disable jumping in week view and day view when clicking on any event using the simple editor
+				scrollTimeReset: false,
 			}
 		},
 		eventSources() {
@@ -162,7 +165,7 @@ export default {
 				interactionPlugin,
 				listPlugin,
 				timeGridPlugin,
-				MomentPlugin,
+				momentPluginFactory(this.$store),
 				VTimezoneNamedTimezone,
 			]
 		},
@@ -277,15 +280,19 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../fonts/scss/iconfont-calendar-app.scss';
-
 .calendar-grid-checkbox {
-	border-color: transparent;
-	@include iconfont('checkbox');
+	border-style: solid;
+	border-width: 2px;
+	border-radius: 4px;
+	height: 16px;
+	width: 16px;
 }
 
 .calendar-grid-checkbox-checked {
-	border-color: transparent;
-	@include iconfont('checkbox-checked');
+	border-style: solid;
+	border-width: 8px;
+	border-radius: 4px;
+	height: 16px;
+	width: 16px;
 }
 </style>

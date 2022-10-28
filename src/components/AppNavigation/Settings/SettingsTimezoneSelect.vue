@@ -2,7 +2,7 @@
   - @copyright Copyright (c) 2019 Georg Ehrke <oc.list@georgehrke.com>
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -21,8 +21,7 @@
 
 <template>
 	<li class="settings-fieldset-interior-item settings-fieldset-interior-item--timezone">
-		<TimezonePicker
-			:additional-timezones="additionalTimezones"
+		<TimezonePicker :additional-timezones="additionalTimezones"
 			:value="timezone"
 			@input="setTimezoneValue" />
 	</li>
@@ -33,7 +32,7 @@ import {
 	mapState,
 } from 'vuex'
 
-import TimezonePicker from '@nextcloud/vue/dist/Components/TimezonePicker'
+import TimezonePicker from '@nextcloud/vue/dist/Components/NcTimezonePicker.js'
 import { detectTimezone } from '../../../services/timezoneDetectionService.js'
 import {
 	showInfo,

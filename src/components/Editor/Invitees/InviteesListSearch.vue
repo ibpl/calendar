@@ -4,7 +4,7 @@
   - @author Georg Ehrke <oc.list@georgehrke.com>
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,8 +22,7 @@
   -->
 
 <template>
-	<Multiselect
-		class="invitees-search__multiselect"
+	<Multiselect class="invitees-search__multiselect"
 		:options="matches"
 		:searchable="true"
 		:internal-search="false"
@@ -40,13 +39,11 @@
 		<template #option="{ option }">
 			<div class="invitees-search-list-item">
 				<!-- We need to specify a unique key here for the avatar to be reactive. -->
-				<Avatar
-					v-if="option.isUser"
+				<Avatar v-if="option.isUser"
 					:key="option.uid"
 					:user="option.avatar"
 					:display-name="option.dropdownName" />
-				<Avatar
-					v-else
+				<Avatar v-else
 					:key="option.uid"
 					:url="option.avatar"
 					:display-name="option.dropdownName" />
@@ -65,12 +62,13 @@
 </template>
 
 <script>
-import Avatar from '@nextcloud/vue/dist/Components/Avatar'
-import Multiselect from '@nextcloud/vue/dist/Components/Multiselect'
+import Avatar from '@nextcloud/vue/dist/Components/NcAvatar.js'
+import Multiselect from '@nextcloud/vue/dist/Components/NcMultiselect.js'
 import { principalPropertySearchByDisplaynameOrEmail } from '../../../services/caldavService.js'
 import HttpClient from '@nextcloud/axios'
 import debounce from 'debounce'
 import { linkTo } from '@nextcloud/router'
+import { randomId } from '../../../utils/randomId.js'
 
 export default {
 	name: 'InviteesListSearch',
@@ -118,7 +116,7 @@ export default {
 				// eslint-disable-next-line
 				const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 				if (emailRegex.test(query)) {
-					const alreadyInList = matches.find((attendee) => attendee.email === query)
+					const alreadyInList = matches.find((attendee) => attendee.email.toLowerCase() === query.toLowerCase())
 					if (!alreadyInList) {
 						matches.unshift({
 							calendarUserType: 'INDIVIDUAL',
@@ -136,7 +134,7 @@ export default {
 
 				// Generate a unique id for every result to make the avatar components reactive
 				for (const match of matches) {
-					match.uid = Math.random().toString(16).slice(2)
+					match.uid = randomId()
 				}
 
 				this.isLoading = false

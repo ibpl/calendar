@@ -4,7 +4,7 @@
   - @author Georg Ehrke <oc.list@georgehrke.com>
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -23,36 +23,29 @@
 
 <template>
 	<div class="property-color">
-		<component
-			:is="icon"
+		<component :is="icon"
 			:size="20"
 			:title="readableName"
 			class="property-color__icon"
 			:class="{ 'property-color__icon--hidden': !showIcon }"
 			decorative />
 
-		<div
-			v-if="isReadOnly"
+		<div v-if="isReadOnly"
 			class="property-color__input property-color__input--readonly">
 			<!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
-			<div
-				class="property-color__color-preview"
+			<div class="property-color__color-preview"
 				:style="{'background-color': selectedColor }" />
 		</div>
-		<div
-			v-else
+		<div v-else
 			class="property-color__input">
-			<ColorPicker
-				:value="selectedColor"
+			<ColorPicker :value="selectedColor"
 				:open.sync="isColorPickerOpen"
 				@input="changeColor">
 				<button class="property-color__color-preview"
 					:style="{'background-color': selectedColor }" />
 			</ColorPicker>
-			<Actions
-				v-if="showColorRevertButton">
-				<ActionButton
-					@click.prevent.stop="deleteColor">
+			<Actions v-if="showColorRevertButton">
+				<ActionButton @click.prevent.stop="deleteColor">
 					<template #icon>
 						<Undo :size="20" decorative />
 					</template>
@@ -64,10 +57,10 @@
 </template>
 
 <script>
-import PropertyMixin from '../../../mixins/PropertyMixin'
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import ColorPicker from '@nextcloud/vue/dist/Components/ColorPicker'
+import PropertyMixin from '../../../mixins/PropertyMixin.js'
+import Actions from '@nextcloud/vue/dist/Components/NcActions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import ColorPicker from '@nextcloud/vue/dist/Components/NcColorPicker.js'
 import debounce from 'debounce'
 
 import Undo from 'vue-material-design-icons/Undo.vue'

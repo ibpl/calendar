@@ -3,7 +3,7 @@
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -23,16 +23,14 @@
 <template>
 	<div class="repeat-option-set repeat-option-set--monthly">
 		<div class="repeat-option-set-section">
-			<ActionRadio
-				class="repeat-option-set-section__title"
+			<ActionRadio class="repeat-option-set-section__title"
 				:name="radioInputId"
 				:checked="byMonthDayEnabled"
 				@change="enableByMonthDay">
 				{{ $t('calendar', 'By day of the month') }}
 			</ActionRadio>
 			<div class="repeat-option-set-section__grid">
-				<button
-					v-for="option in byMonthDayOptions"
+				<button v-for="option in byMonthDayOptions"
 					:key="option.value"
 					class="repeat-option-set-section-grid-item"
 					:class="{ primary: option.selected }"
@@ -43,19 +41,16 @@
 			</div>
 		</div>
 		<div class="repeat-option-set-section repeat-option-set-section--on-the-select">
-			<ActionRadio
-				class="repeat-option-set-section__title"
+			<ActionRadio class="repeat-option-set-section__title"
 				:name="radioInputId"
 				:checked="!byMonthDayEnabled"
 				@change="enableBySetPosition">
 				{{ $t('calendar', 'On the') }}
 			</ActionRadio>
-			<RepeatFirstLastSelect
-				:by-set-position="bySetPosition"
+			<RepeatFirstLastSelect :by-set-position="bySetPosition"
 				:disabled="byMonthDayEnabled"
 				@change="changeBySetPosition" />
-			<RepeatOnTheSelect
-				:by-day="byDay"
+			<RepeatOnTheSelect :by-day="byDay"
 				:disabled="byMonthDayEnabled"
 				@change="changeByDay" />
 		</div>
@@ -65,7 +60,7 @@
 <script>
 import RepeatFirstLastSelect from './RepeatFirstLastSelect.vue'
 import RepeatOnTheSelect from './RepeatOnTheSelect.vue'
-import ActionRadio from '@nextcloud/vue/dist/Components/ActionRadio'
+import ActionRadio from '@nextcloud/vue/dist/Components/NcActionRadio.js'
 
 export default {
 	name: 'RepeatFreqMonthlyOptions',

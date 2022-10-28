@@ -3,7 +3,7 @@
   -
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -23,8 +23,7 @@
 <template>
 	<div class="text-area">
 		<label :for="id">{{ label }}</label>
-		<textarea
-			:id="id"
+		<textarea :id="id"
 			v-autosize="true"
 			:value="value"
 			:rows="2"
@@ -33,8 +32,8 @@
 </template>
 
 <script>
-import { randomId } from '../../utils/randomId'
-import autosize from '../../directives/autosize'
+import { randomId } from '../../utils/randomId.js'
+import autosize from '../../directives/autosize.js'
 
 export default {
 	name: 'TextArea',

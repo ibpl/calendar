@@ -3,7 +3,7 @@
   -
   - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,35 +22,30 @@
 
 <template>
 	<div>
-		<ResourceListSearch
-			v-if="!isReadOnly && hasUserEmailAddress"
+		<ResourceListSearch v-if="!isReadOnly && hasUserEmailAddress"
 			:already-invited-emails="alreadyInvitedEmails"
 			:calendar-object-instance="calendarObjectInstance"
 			@add-resource="addResource" />
 
-		<ResourceListItem
-			v-for="resource in resources"
+		<ResourceListItem v-for="resource in resources"
 			:key="resource.email"
 			:resource="resource"
 			:is-read-only="isReadOnly"
 			:organizer-display-name="organizerDisplayName"
 			@remove-resource="removeResource" />
 
-		<NoAttendeesView
-			v-if="isListEmpty && hasUserEmailAddress"
+		<NoAttendeesView v-if="isListEmpty && hasUserEmailAddress"
 			:message="noResourcesMessage">
 			<template #icon>
 				<MapMarker :size="50" decorative />
 			</template>
 		</NoAttendeesView>
-		<OrganizerNoEmailError
-			v-if="!isReadOnly && isListEmpty && !hasUserEmailAddress" />
+		<OrganizerNoEmailError v-if="!isReadOnly && isListEmpty && !hasUserEmailAddress" />
 
 		<h3 v-if="suggestedRooms.length">
 			{{ $t('calendar', 'Suggestions') }}
 		</h3>
-		<ResourceListItem
-			v-for="room in suggestedRooms"
+		<ResourceListItem v-for="room in suggestedRooms"
 			:key="room.email + '-suggested'"
 			:resource="room"
 			:is-read-only="false"
@@ -61,14 +56,14 @@
 </template>
 
 <script>
-import { advancedPrincipalPropertySearch } from '../../../services/caldavService'
-import { checkResourceAvailability } from '../../../services/freeBusyService'
-import logger from '../../../utils/logger'
-import NoAttendeesView from '../NoAttendeesView'
-import ResourceListSearch from './ResourceListSearch'
-import ResourceListItem from './ResourceListItem'
-import OrganizerNoEmailError from '../OrganizerNoEmailError'
-import { organizerDisplayName, removeMailtoPrefix } from '../../../utils/attendee'
+import { advancedPrincipalPropertySearch } from '../../../services/caldavService.js'
+import { checkResourceAvailability } from '../../../services/freeBusyService.js'
+import logger from '../../../utils/logger.js'
+import NoAttendeesView from '../NoAttendeesView.vue'
+import ResourceListSearch from './ResourceListSearch.vue'
+import ResourceListItem from './ResourceListItem.vue'
+import OrganizerNoEmailError from '../OrganizerNoEmailError.vue'
+import { organizerDisplayName, removeMailtoPrefix } from '../../../utils/attendee.js'
 
 import MapMarker from 'vue-material-design-icons/MapMarker.vue'
 
@@ -106,10 +101,6 @@ export default {
 			return this.calendarObjectInstance.attendees.filter(attendee => {
 				return !['RESOURCE', 'ROOM'].includes(attendee.attendeeProperty.userType)
 			})
-		},
-		hasAdvancedFilters() {
-			// TODO: Remove me when Calendar doesn't support server < 23
-			return parseInt(OC.config.version.split('.')[0]) >= 23
 		},
 		noResourcesMessage() {
 			return this.$t('calendar', 'No rooms or resources yet')
@@ -159,7 +150,7 @@ export default {
 			})
 		},
 		async loadRoomSuggestions() {
-			if (this.resources.length > 0 || !this.hasAdvancedFilters) {
+			if (this.resources.length > 0) {
 				this.suggestedRooms = []
 				return
 			}

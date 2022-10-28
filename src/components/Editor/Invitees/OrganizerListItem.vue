@@ -2,8 +2,9 @@
   - @copyright Copyright (c) 2019 Georg Ehrke <oc.list@georgehrke.com>
   -
   - @author Georg Ehrke <oc.list@georgehrke.com>
+  - @author Richard Steinmetz <richard@steinmetz.cloud>
   -
-  - @license GNU AGPL version 3 or any later version
+  - @license AGPL-3.0-or-later
   -
   - This program is free software: you can redistribute it and/or modify
   - it under the terms of the GNU Affero General Public License as
@@ -22,8 +23,7 @@
 
 <template>
 	<div class="invitees-list-item">
-		<AvatarParticipationStatus
-			:attendee-is-organizer="true"
+		<AvatarParticipationStatus :attendee-is-organizer="true"
 			:avatar-link="avatarLink"
 			:is-viewed-by-organizer="isViewedByOrganizer"
 			:is-resource="isResource"
@@ -40,7 +40,8 @@
 </template>
 
 <script>
-import AvatarParticipationStatus from '../AvatarParticipationStatus'
+import AvatarParticipationStatus from '../AvatarParticipationStatus.vue'
+import { removeMailtoPrefix } from '../../../utils/attendee.js'
 
 export default {
 	name: 'OrganizerListItem',
@@ -58,20 +59,28 @@ export default {
 		},
 	},
 	computed: {
+		/**
+		 * @return {string}
+		 */
 		avatarLink() {
 			// return this.$store.getters.getAvatarForContact(this.uri) || this.commonName
-			return this.organizer.commonName
+			return this.commonName
 		},
+		/**
+		 * Common name of the attendee or the uri without the 'mailto:' prefix.
+		 *
+		 * @return {string}
+		 */
 		commonName() {
 			if (this.organizer.commonName) {
 				return this.organizer.commonName
 			}
 
-			if (this.organizer.uri && this.organizer.uri.startsWith('mailto:')) {
-				return this.organizer.uri.substr(7)
+			if (this.organizer.uri) {
+				return removeMailtoPrefix(this.organizer.uri)
 			}
 
-			return this.organizer.uri
+			return ''
 		},
 		isViewedByOrganizer() {
 			return true
@@ -86,6 +95,9 @@ export default {
 <style lang="scss" scoped>
 .invitees-list-item__displayname {
 	margin-bottom: 13px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
 }
 
 .invitees-list-item__organizer-hint {
