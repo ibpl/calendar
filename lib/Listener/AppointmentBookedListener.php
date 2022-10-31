@@ -28,6 +28,7 @@ namespace OCA\Calendar\Listener;
 use OCA\Calendar\Events\AppointmentBookedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use OCP\IL10N;
 use OCP\IServerContainer;
 use OCP\IUserManager;
 use OCP\Talk\IBroker;
@@ -43,14 +44,18 @@ class AppointmentBookedListener implements IEventListener {
 	/** @var IUserManager */
 	private $userManager;
 
+	private IL10N $l10n;
+
 	/** @var LoggerInterface */
 	private $logger;
 
 	public function __construct(IBroker $broker,
 								IUserManager $userManager,
+								IL10N $l10n,
 								LoggerInterface $logger) {
 		$this->broker = $broker;
 		$this->userManager = $userManager;
+		$this->l10n = $l10n;
 		$this->logger = $logger;
 	}
 
@@ -81,8 +86,12 @@ class AppointmentBookedListener implements IEventListener {
 			]);
 			return;
 		}
-		$conversation = $this->broker->createConversation(
+		$conversationName = $this->l10n->t('%s with %s', [
 			$event->getConfig()->getName(),
+			$event->getBooking()->getDisplayName(),
+		]);
+		$conversation = $this->broker->createConversation(
+			$conversationName,
 			[$organizer],
 			$this->broker->newConversationOptions(),
 		);
