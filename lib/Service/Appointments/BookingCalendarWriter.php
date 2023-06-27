@@ -93,7 +93,7 @@ class BookingCalendarWriter {
 	 * @return string
 	 * @throws RuntimeException
 	 */
-	public function write(AppointmentConfig $config, DateTimeImmutable $start, string $displayName, string $email, ?string $description = null) : string {
+	public function write(AppointmentConfig $config, DateTimeImmutable $start, string $displayName, string $email, string $timezone, ?string $description = null) : string {
 		$calendar = current($this->manager->getCalendarsForPrincipal($config->getPrincipalUri(), [$config->getTargetCalendarUri()]));
 		if (!($calendar instanceof ICreateFromString)) {
 			throw new RuntimeException('Could not find a public writable calendar for this principal');
@@ -113,7 +113,10 @@ class BookingCalendarWriter {
 				'STATUS' => 'CONFIRMED',
 				'DTSTART' => $start,
 				'DTEND' => $start->setTimestamp($start->getTimestamp() + ($config->getLength()))
-			]
+			],
+			'VTIMEZONE' => [
+				'TZID' => $timezone
+			],
 		]);
 
 		if (!empty($description)) {
@@ -191,7 +194,10 @@ class BookingCalendarWriter {
 					'STATUS' => 'CONFIRMED',
 					'DTSTART' => $prepStart,
 					'DTEND' => $start
-				]
+				],
+				'VTIMEZONE' => [
+					'TZID' => $timezone
+				],
 			]);
 
 			$prepCalendar->VEVENT->add('RELATED-TO', $vcalendar->VEVENT->{'UID'});
@@ -219,7 +225,10 @@ class BookingCalendarWriter {
 					'STATUS' => 'CONFIRMED',
 					'DTSTART' => $followupStart,
 					'DTEND' => $followUpEnd
-				]
+				],
+				'VTIMEZONE' => [
+					'TZID' => $timezone
+				],
 			]);
 
 			$followUpCalendar->VEVENT->add('RELATED-TO', $vcalendar->VEVENT->{'UID'});

@@ -111,7 +111,7 @@ class BookingService {
 			throw new ClientException('Could not make sense of booking times');
 		}
 
-		$calendar = $this->calendarWriter->write($config, $startObj, $booking->getDisplayName(), $booking->getEmail(), $booking->getDescription());
+		$calendar = $this->calendarWriter->write($config, $startObj, $booking->getDisplayName(), $booking->getEmail(), $booking->getTimezone(), $booking->getDescription());
 		$booking->setConfirmed(true);
 		$this->bookingMapper->update($booking);
 
