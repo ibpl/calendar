@@ -48,17 +48,9 @@ declare(strict_types=1);
 
 namespace OCA\Calendar\Service\Appointments;
 
-use DateInterval;
-use DatePeriod;
-use DateTimeImmutable;
-use DateTimeZone;
-use OCA\Calendar\Db\AppointmentConfig;
-use OCA\Calendar\Service\Appointments\Interval;
-use OCP\AppFramework\Utility\ITimeFactory;
 use Sabre\VObject\Component;
 use Sabre\VObject\Component\VCalendar;
 use Sabre\VObject\TimeZoneUtil;
-use function ceil;
 use function max;
 use function min;
 
@@ -76,11 +68,10 @@ class TimezoneGenerator {
 	 * @return null|Component A Sabre\VObject\Component object representing a VTIMEZONE definition
 	 *               or null if no timezone information is available
 	 */
-	public function generateVtimezone(string $timezone,int $from, int $to): ?Component {
+	public function generateVtimezone(string $timezone, int $from, int $to): ?Component {
 		try {
 			$tz = new \DateTimeZone($timezone);
-		}
-		catch (\Exception $e) {
+		} catch (\Exception $e) {
 			return null;
 		}
 
@@ -122,7 +113,7 @@ class TimezoneGenerator {
 
 				$component->DTSTART = $date->format('Ymd\THis');
 				$component->TZOFFSETFROM = sprintf('%s%02d%02d', $tzfrom >= 0 ? '+' : '-', abs(floor($tzfrom)), ($tzfrom - floor($tzfrom)) * 60);
-				$component->TZOFFSETTO   = sprintf('%s%02d%02d', $offset >= 0 ? '+' : '-', abs(floor($offset)), ($offset - floor($offset)) * 60);
+				$component->TZOFFSETTO = sprintf('%s%02d%02d', $offset >= 0 ? '+' : '-', abs(floor($offset)), ($offset - floor($offset)) * 60);
 
 				// add abbreviated timezone name if available
 				if (!empty($trans['abbr'])) {

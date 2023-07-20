@@ -29,7 +29,6 @@ namespace OCA\Calendar\Service\Appointments;
 use DateTimeImmutable;
 use OCA\Calendar\AppInfo\Application;
 use OCA\Calendar\Db\AppointmentConfig;
-use OCA\Calendar\Service\Appointments\TimezoneGenerator;
 use OCP\Calendar\Exceptions\CalendarException;
 use OCP\Calendar\ICreateFromString;
 use OCP\Calendar\IManager;
@@ -38,9 +37,7 @@ use OCP\IL10N;
 use OCP\IUserManager;
 use OCP\Security\ISecureRandom;
 use RuntimeException;
-use Sabre\VObject\Component;
 use Sabre\VObject\Component\VCalendar;
-use Sabre\VObject\TimeZoneUtil;
 use function abs;
 
 class BookingCalendarWriter {
