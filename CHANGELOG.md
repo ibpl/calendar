@@ -1,7 +1,13 @@
 
 # Changelog
 
-## 4.6.0 - unreleased
+## 4.6.1 - 2023-12-21
+### Fixed
+- Localisation for month view
+- From/To order in booking emails
+- Alarm not editable when menu is open
+
+## 4.6.0 - 2023-11-30
 ### Added
 - v2 for widget API
 - PHP8.3 support
