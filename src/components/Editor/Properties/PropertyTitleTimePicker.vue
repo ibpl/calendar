@@ -90,8 +90,9 @@ import moment from '@nextcloud/moment'
 import DatePicker from '../../Shared/DatePicker.vue'
 import IconTimezone from 'vue-material-design-icons/Web.vue'
 import CalendarIcon from 'vue-material-design-icons/Calendar.vue'
-import { mapState } from 'vuex'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import { mapState } from 'pinia'
+import useSettingsStore from '../../../store/settings.js'
 
 export default {
 	name: 'PropertyTitleTimePicker',
@@ -177,8 +178,8 @@ export default {
 		}
 	},
 	computed: {
-		...mapState({
-			locale: (state) => state.settings.momentLocale,
+		...mapState(useSettingsStore, {
+			locale: 'momentLocale',
 		}),
 		/**
 		 * Tooltip for the All-day checkbox.

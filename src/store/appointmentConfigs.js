@@ -2,6 +2,7 @@
  * @copyright Copyright (c) 2021 Richard Steinmetz <richard@steinmetz.cloud>
  *
  * @author Richard Steinmetz <richard@steinmetz.cloud>
+ * @author Grigory Vodyanov <scratchx@gmx.com>
  *
  * @license AGPL-3.0-or-later
  *
@@ -24,21 +25,21 @@ import Vue from 'vue'
 import { defineStore } from 'pinia'
 import { createConfig, deleteConfig, updateConfig } from '../services/appointmentConfigService.js'
 import logger from '../utils/logger.js'
+import Vue from 'vue'
 
-export default defineStore('appointmentConfig', {
+export default defineStore('appointmentConfigs', {
 	state: () => {
 		return {
 			configs: {},
 		}
 	},
 	getters: {
-		allConfigs() {
-			return Object.values(this.configs)
-		},
+		allConfigs: (state) => Object.values(state.configs),
 	},
 	actions: {
 		addInitialConfigs(configs) {
 			for (const config of configs) {
+				/// TODO this.configs[config.id] = config
 				Vue.set(this.configs, config.id, config)
 			}
 		},
@@ -76,16 +77,20 @@ export default defineStore('appointmentConfig', {
 				return
 			}
 
+			/// TODO this.configs[config.id] = config.clone()
 			Vue.set(this.configs, config.id, config.clone())
 		},
 		addConfigMutation(config) {
-			Vue.set(this.configs, config.id, config)
+
+			/// TODO this.configs[config.id] = config.clone()
+			Vue.set(this.configs, config.id, config.clone())
 		},
 		deleteConfigMutation(id) {
 			if (!this.configs[id]) {
 				return
 			}
 
+			/// TODO delete this.configs[id]
 			Vue.delete(this.configs, id)
 		},
 	},

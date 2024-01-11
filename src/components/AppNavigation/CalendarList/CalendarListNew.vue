@@ -134,7 +134,9 @@ import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Web from 'vue-material-design-icons/Web.vue'
-import { mapState } from 'vuex'
+import { mapStores, mapState } from 'pinia'
+import useCalendarsStore from '../../../store/calendars.js'
+import useSettingsStore from '../../../store/settings.js'
 
 export default {
 	name: 'CalendarListNew',
@@ -172,10 +174,11 @@ export default {
 		}
 	},
 	computed: {
-		...mapState({
-			canSubscribeLink: state => state.settings.canSubscribeLink,
-			hasPublicCalendars: state => Boolean(state.settings.publicCalendars),
+		...mapState(useSettingsStore, {
+			canSubscribeLink: 'canSubscribeLink',
+			hasPublicCalendars: store => Boolean(store.publicCalendars),
 		}),
+		...mapStores(useCalendarsStore),
 	},
 	watch: {
 		isOpen() {
@@ -247,7 +250,7 @@ export default {
 			const displayName = event.target.querySelector('input[type=text]').value
 
 			try {
-				await this.$store.dispatch('appendCalendar', {
+				await this.calendarsStore.appendCalendar({
 					displayName,
 					color: uidToHexColor(displayName),
 				})
@@ -273,7 +276,7 @@ export default {
 			const displayName = event.target.querySelector('input[type=text]').value
 
 			try {
-				await this.$store.dispatch('appendCalendar', {
+				await this.calendarsStore.appendCalendar({
 					displayName,
 					color: uidToHexColor(displayName),
 					components: ['VEVENT', 'VTODO'],
@@ -310,7 +313,7 @@ export default {
 			}
 
 			try {
-				await this.$store.dispatch('appendSubscription', {
+				await this.calendarsStore.appendSubscription({
 					displayName: hostname,
 					color: uidToHexColor(link),
 					source: link,

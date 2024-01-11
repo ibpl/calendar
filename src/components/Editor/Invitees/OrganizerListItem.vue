@@ -63,7 +63,6 @@ export default {
 		 * @return {string}
 		 */
 		avatarLink() {
-			// return this.$store.getters.getAvatarForContact(this.uri) || this.commonName
 			return this.commonName
 		},
 		/**

@@ -28,15 +28,13 @@
 </template>
 
 <script>
-import {
-	mapState,
-} from 'vuex'
-
 import { NcTimezonePicker as TimezonePicker } from '@nextcloud/vue'
 import { detectTimezone } from '../../../services/timezoneDetectionService.js'
 import {
 	showInfo,
 } from '@nextcloud/dialogs'
+import useSettingsStore from '../../../store/settings.js'
+import { mapStores, mapState } from 'pinia'
 
 export default {
 	name: 'SettingsTimezoneSelect',
@@ -50,8 +48,9 @@ export default {
 		},
 	},
 	computed: {
-		...mapState({
-			timezone: state => (state.settings.timezone || 'automatic'),
+		...mapStores(useSettingsStore),
+		...mapState(useSettingsStore, {
+			timezone: store => store.timezone || 'automatic',
 		}),
 		/**
 		 * Offer "Automatic" as an additional timezone
@@ -75,7 +74,7 @@ export default {
 		 * @param {string} timezoneId New timezoneId to save
 		 */
 		setTimezoneValue(timezoneId) {
-			this.$store.dispatch('setTimezone', { timezoneId })
+			this.settingsStore.setTimezone({ timezoneId })
 				.catch((error) => {
 					console.error(error)
 					showInfo(this.$t('calendar', 'New setting was not saved successfully.'))

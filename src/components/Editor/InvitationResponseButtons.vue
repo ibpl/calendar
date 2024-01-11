@@ -66,6 +66,8 @@ import {
 import CalendarQuestionIcon from 'vue-material-design-icons/CalendarQuestion.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import logger from '../../utils/logger.js'
+import useCalendarObjectInstanceStore from '../../store/calendarObjectInstance.js'
+import { mapStores } from 'pinia'
 
 export default {
 	name: 'InvitationResponseButtons',
@@ -99,6 +101,7 @@ export default {
 		}
 	},
 	computed: {
+		...mapStores(useCalendarObjectInstanceStore),
 		isAccepted() {
 			return this.attendee.participationStatus === 'ACCEPTED'
 		},
@@ -146,13 +149,13 @@ export default {
 		async setParticipationStatus(participationStatus) {
 			this.loading = true
 			try {
-				this.$store.commit('changeAttendeesParticipationStatus', {
+				this.calendarObjectInstanceStore.changeAttendeesParticipationStatus({
 					attendee: this.attendee,
 					participationStatus,
 				})
 				// TODO: What about recurring events? Add new buttons like "Accept this and all future"?
 				// Currently, this will only accept a single occurrence.
-				await this.$store.dispatch('saveCalendarObjectInstance', {
+				await this.calendarObjectInstanceStore.saveCalendarObjectInstance({
 					thisAndAllFuture: false,
 					calendarId: this.calendarId,
 				})

@@ -78,7 +78,11 @@ import pLimit from 'p-limit'
 import { eventSourceFunction } from '../fullcalendar/eventSources/eventSourceFunction.js'
 import loadMomentLocalization from '../utils/moment.js'
 import { DateTimeValue } from '@nextcloud/calendar-js'
-import { mapGetters } from 'vuex'
+import { mapStores, mapState } from 'pinia'
+import useSettingsStore from '../store/settings.js'
+import useCalendarsStore from '../store/calendars.js'
+import usePrincipalsStore from '../store/principals.js'
+import useFetchedTimeRangesStore from '../store/fetchedTimeRanges.js'
 
 export default {
 	name: 'Dashboard',
@@ -101,9 +105,10 @@ export default {
 		}
 	},
 	computed: {
-		...mapGetters({
+		...mapState(useSettingsStore, {
 			timezoneObject: 'getResolvedTimezoneObject',
 		}),
+		...mapStores(useSettingsStore, useCalendarsStore, usePrincipalsStore, useFetchedTimeRangesStore),
 		/**
 		 * Format loaded events
 		 *
@@ -160,8 +165,8 @@ export default {
 		 */
 		async initializeEnvironment() {
 			await initializeClientForUserView()
-			await this.$store.dispatch('fetchCurrentUserPrincipal')
-			await this.$store.dispatch('loadCollections')
+			await this.principalsStore.fetchCurrentUserPrincipal()
+			await this.calendarsStore.loadCollections()
 
 			const {
 				show_tasks: showTasks,
@@ -169,11 +174,11 @@ export default {
 			} = loadState('calendar', 'dashboard_data')
 			const locale = await loadMomentLocalization()
 
-			this.$store.commit('loadSettingsFromServer', {
+			this.settingsStore.loadSettingsFromServer({
 				timezone,
 				showTasks,
 			})
-			this.$store.commit('setMomentLocale', {
+			this.settingsStore.setMomentLocale({
 				locale,
 			})
 		},
@@ -187,11 +192,11 @@ export default {
 		async fetchExpandedEvents(from, to) {
 			const limit = pLimit(10)
 			const fetchEventPromises = []
-			for (const calendar of this.$store.getters.enabledCalendars) {
+			for (const calendar of this.calendarsStore.enabledCalendars) {
 				fetchEventPromises.push(limit(async () => {
 					let timeRangeId
 					try {
-						timeRangeId = await this.$store.dispatch('getEventsFromCalendarInTimeRange', {
+						timeRangeId = await this.calendarsStore.getEventsFromCalendarInTimeRange({
 							calendar,
 							from,
 							to,
@@ -200,7 +205,7 @@ export default {
 						return []
 					}
 
-					const calendarObjects = this.$store.getters.getCalendarObjectsByTimeRangeId(timeRangeId)
+					const calendarObjects = this.fetchedTimeRangesStore.getCalendarObjectsByTimeRangeId(timeRangeId)
 					return eventSourceFunction(calendarObjects, calendar, from, to, this.timezoneObject)
 				}))
 			}
@@ -229,8 +234,8 @@ export default {
 					subText: this.formatSubtext(event),
 					mainText: event.title,
 					startDate: event.start,
-					calendarColor: this.$store.state.calendars.calendarsById[event.extendedProps.calendarId].color,
-					calendarDisplayName: this.$store.state.calendars.calendarsById[event.extendedProps.calendarId].displayname,
+					calendarColor: this.calendarsStore.calendarsById[event.extendedProps.calendarId].color,
+					calendarDisplayName: this.calendarsStore.calendarsById[event.extendedProps.calendarId].displayname,
 				}))
 		},
 		/**
@@ -238,7 +243,7 @@ export default {
 		 * @return {string}
 		 */
 		formatSubtext(event) {
-			const locale = this.$store.state.settings.momentLocale
+			const locale = this.settingsStore.momentLocale
 
 			if (event.allDay) {
 				return moment(event.start).locale(locale).calendar(null, {

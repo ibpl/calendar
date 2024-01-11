@@ -290,7 +290,6 @@ import {
 	NcCheckboxRadioSwitch,
 } from '@nextcloud/vue'
 
-import { mapState } from 'vuex'
 import { generateUrl } from '@nextcloud/router'
 
 import AlarmList from '../components/Editor/Alarm/AlarmList.vue'
@@ -324,6 +323,11 @@ import { shareFile } from '../services/attachmentService.js'
 import { Parameter } from '@nextcloud/calendar-js'
 import getTimezoneManager from '../services/timezoneDataProviderService.js'
 import logger from '../utils/logger.js'
+
+import usePrincipalsStore from '../store/principals.js'
+import useSettingsStore from '../store/settings.js'
+import useCalendarObjectInstanceStore from '../store/calendarObjectInstance.js'
+import { mapStores, mapState } from 'pinia'
 
 export default {
 	name: 'EditSidebar',
@@ -374,12 +378,14 @@ export default {
 		}
 	},
 	computed: {
-		...mapState({
-			locale: (state) => state.settings.momentLocale,
-			hideEventExport: (state) => state.settings.hideEventExport,
-			attachmentsFolder: state => state.settings.attachmentsFolder,
-			showResources: state => state.settings.showResources,
+		...mapStores(usePrincipalsStore),
+		...mapState(useSettingsStore, {
+			locale: 'momentLocale',
+			hideEventExport: 'hideEventExport',
+			attachmentsFolder: 'attachmentsFolder',
+			showResources: 'showResources',
 		}),
+		...mapState(useCalendarObjectInstanceStore, ['calendarObjectInstance']),
 		accessClass() {
 			return this.calendarObjectInstance?.accessClass || null
 		},
@@ -412,7 +418,7 @@ export default {
 			return this.calendarObjectInstance?.attachments || null
 		},
 		currentUser() {
-			return this.$store.getters.getCurrentUserPrincipal || null
+			return this.principalsStore.getCurrentUserPrincipal || null
 		},
 	},
 	mounted() {
@@ -443,7 +449,7 @@ export default {
 		 * @param {string} accessClass The new access class
 		 */
 		updateAccessClass(accessClass) {
-			this.$store.commit('changeAccessClass', {
+			this.calendarObjectInstanceStore.changeAccessClass({
 				calendarObjectInstance: this.calendarObjectInstance,
 				accessClass,
 			})
@@ -454,7 +460,7 @@ export default {
 		 * @param {string} status The new status
 		 */
 		updateStatus(status) {
-			this.$store.commit('changeStatus', {
+			this.calendarObjectInstanceStore.changeStatus({
 				calendarObjectInstance: this.calendarObjectInstance,
 				status,
 			})
@@ -465,7 +471,7 @@ export default {
 		 * @param {string} timeTransparency The new time-transparency
 		 */
 		updateTimeTransparency(timeTransparency) {
-			this.$store.commit('changeTimeTransparency', {
+			this.calendarObjectInstanceStore.changeTimeTransparency({
 				calendarObjectInstance: this.calendarObjectInstance,
 				timeTransparency,
 			})
@@ -476,7 +482,7 @@ export default {
 		 * @param {string} category Category to add
 		 */
 		addCategory(category) {
-			this.$store.commit('addCategory', {
+			this.calendarObjectInstanceStore.addCategory({
 				calendarObjectInstance: this.calendarObjectInstance,
 				category,
 			})
@@ -487,7 +493,7 @@ export default {
 		 * @param {string} category Category to remove
 		 */
 		removeCategory(category) {
-			this.$store.commit('removeCategory', {
+			this.calendarObjectInstanceStore.removeCategory({
 				calendarObjectInstance: this.calendarObjectInstance,
 				category,
 			})
@@ -498,7 +504,7 @@ export default {
 		 * @param {string} customColor The new color
 		 */
 		updateColor(customColor) {
-			this.$store.commit('changeCustomColor', {
+			this.calendarObjectInstanceStore.changeCustomColor({
 				calendarObjectInstance: this.calendarObjectInstance,
 				customColor,
 			})

@@ -35,6 +35,11 @@
 <script>
 import CalendarPicker from '../../Shared/CalendarPicker.vue'
 import { uidToHexColor } from '../../../utils/color.js'
+import usePrincipalsStore from '../../../store/principals.js'
+import useImportFilesStore from '../../../store/importFiles.js'
+import useCalendarsStore from '../../../store/calendars.js'
+import { mapStores } from 'pinia'
+import Vue from 'vue'
 
 export default {
 	name: 'ImportScreenRow',
@@ -48,11 +53,12 @@ export default {
 		},
 	},
 	computed: {
+		...mapStores(usePrincipalsStore, useImportFilesStore, useCalendarsStore),
 		calendar() {
-			let calendarId = this.$store.state.importFiles.importCalendarRelation[this.file.id]
+			let calendarId = this.importFilesStore.importCalendarRelation[this.file.id]
 			if (!calendarId) {
 				this.setDefaultCalendarId()
-				calendarId = this.$store.state.importFiles.importCalendarRelation[this.file.id]
+				calendarId = this.importFilesStore.importCalendarRelation[this.file.id]
 			}
 
 			if (calendarId === 'new') {
@@ -61,16 +67,16 @@ export default {
 					displayName: this.$t('calendar', 'New calendar'),
 					isSharedWithMe: false,
 					color: uidToHexColor(this.$t('calendar', 'New calendar')),
-					owner: this.$store.getters.getCurrentUserPrincipal.url,
+					owner: this.principalsStore.getCurrentUserPrincipal.url,
 				}
 			}
 
-			return this.$store.getters.getCalendarById(calendarId)
+			return this.calendarsStore.getCalendarById(calendarId)
 		},
 		calendars() {
 			// TODO: remove once the false positive is fixed upstream
 			// eslint-disable-next-line vue/no-side-effects-in-computed-properties
-			const calendars = this.$store.getters.sortedCalendarFilteredByComponents(
+			const calendars = this.calendarsStore.sortedCalendarFilteredByComponents(
 				this.file.parser.containsVEvents(),
 				this.file.parser.containsVJournals(),
 				this.file.parser.containsVTodos(),
@@ -81,7 +87,7 @@ export default {
 				displayName: this.$t('calendar', 'New calendar'),
 				isSharedWithMe: false,
 				color: uidToHexColor(this.$t('calendar', 'New calendar')),
-				owner: this.$store.getters.getCurrentUserPrincipal.url,
+				owner: this.principalsStore.getCurrentUserPrincipal.url,
 			})
 
 			return calendars
@@ -89,16 +95,12 @@ export default {
 	},
 	methods: {
 		selectCalendar(newCalendar) {
-			this.$store.commit('setCalendarForFileId', {
-				fileId: this.file.id,
-				calendarId: newCalendar.id,
-			})
+			// TODO: remove Vue.set() call in Vue 3 (will be reactive by default)
+			Vue.set(this.importFilesStore.importCalendarRelation, this.file.id, newCalendar.id)
 		},
 		setDefaultCalendarId() {
-			this.$store.commit('setCalendarForFileId', {
-				fileId: this.file.id,
-				calendarId: this.calendars[0].id,
-			})
+			// TODO: remove Vue.set() call in Vue 3 (will be reactive by default)
+			Vue.set(this.importFilesStore.importCalendarRelation, this.file.id, this.calendars[0].id)
 		},
 	},
 }

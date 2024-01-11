@@ -2,6 +2,7 @@
  * @copyright Copyright (c) 2020 Georg Ehrke
  *
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author 2024 Richard Steinmetz <richard@steinmetz.cloud>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -19,12 +20,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import importFilesStore from '../../../../src/store/importFiles.js'
+import useImportFilesStore from '../../../../src/store/importFiles.js'
+import { setActivePinia, createPinia } from 'pinia'
 
 describe('store/importFiles test suite', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
 
 	it('should provide a default state', () => {
-		expect(importFilesStore.state).toEqual({
+		const importFilesStore = useImportFilesStore()
+
+		expect(importFilesStore.$state).toEqual({
 			lastFileInsertId: -1,
 			importFiles: [],
 			importFilesById: {},
@@ -33,11 +40,15 @@ describe('store/importFiles test suite', () => {
 	})
 
 	it('should provide a mutation to add a file', () => {
+		const importFilesStore = useImportFilesStore()
+
 		const state = {
 			lastFileInsertId: 41,
 			importFiles: [],
 			importFilesById: {},
 		}
+
+		importFilesStore.$state = state
 
 		const file1 = {
 			contents: 'BEGIN:VCALENDAR...',
@@ -56,10 +67,10 @@ describe('store/importFiles test suite', () => {
 			type: 'application/json+calendar',
 		}
 
-		importFilesStore.mutations.addFile(state, file1)
-		importFilesStore.mutations.addFile(state, file2)
+		importFilesStore.addFile(file1)
+		importFilesStore.addFile(file2)
 
-		expect(state.importFiles).toEqual([
+		expect(importFilesStore.importFiles).toEqual([
 			{
 				...file1,
 				id: 42,
@@ -69,31 +80,37 @@ describe('store/importFiles test suite', () => {
 			}
 		])
 
-		expect(state.importFilesById[42]).toEqual({
+		expect(importFilesStore.importFilesById[42]).toEqual({
 			...file1,
 			id: 42,
 		})
-		expect(state.importFilesById[43]).toEqual({
+		expect(importFilesStore.importFilesById[43]).toEqual({
 			...file2,
 			id: 43,
 		})
 	})
 
 	it('should provide a mutation to set a calendarId for a file', () => {
+		const importFilesStore = useImportFilesStore()
+
 		const state = {
 			importCalendarRelation: {},
 		}
 
-		importFilesStore.mutations.setCalendarForFileId(state, { fileId: 0, calendarId: 'CALENDAR-ID-1' })
-		importFilesStore.mutations.setCalendarForFileId(state, { fileId: 42, calendarId: 'CALENDAR-ID-1' })
+		importFilesStore.importCalendarRelation = state.importCalendarRelation
 
-		expect(state.importCalendarRelation).toEqual({
+		importFilesStore.importCalendarRelation[0] = 'CALENDAR-ID-1'
+		importFilesStore.importCalendarRelation[42] = 'CALENDAR-ID-1'
+
+		expect(importFilesStore.importCalendarRelation).toEqual({
 			0: 'CALENDAR-ID-1',
 			42: 'CALENDAR-ID-1',
 		})
 	})
 
 	it('should provide a mutation to remove all files', () => {
+		const importFilesStore = useImportFilesStore()
+
 		const file1 = {
 			id: 0,
 			contents: 'BEGIN:VCALENDAR...',
@@ -129,9 +146,11 @@ describe('store/importFiles test suite', () => {
 			},
 		}
 
-		importFilesStore.mutations.removeAllFiles(state)
+		importFilesStore.$state = state
 
-		expect(state).toEqual({
+		importFilesStore.removeAllFiles()
+
+		expect(importFilesStore.$state).toEqual({
 			lastFileInsertId: 1,
 			importFiles: [],
 			importFilesById: {},

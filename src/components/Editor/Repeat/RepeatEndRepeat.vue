@@ -56,6 +56,9 @@
 import DatePicker from '../../Shared/DatePicker.vue'
 import { NcSelect } from '@nextcloud/vue'
 
+import { mapStores } from 'pinia'
+import useDavRestrictionsStore from '../../../store/davRestrictions.js'
+
 export default {
 	name: 'RepeatEndRepeat',
 	components: {
@@ -80,6 +83,7 @@ export default {
 		},
 	},
 	computed: {
+		...mapStores(useDavRestrictionsStore),
 		/**
 		 * The minimum date the user can select in the until date-picker
 		 *
@@ -94,7 +98,7 @@ export default {
 		 * @return {Date}
 		 */
 		maximumDate() {
-			return new Date(this.$store.state.davRestrictions.maximumDate)
+			return new Date(this.davRestrictionsStore.maximumDate)
 		},
 		/**
 		 * Whether or not this event is recurring until a given date

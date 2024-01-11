@@ -38,11 +38,12 @@
 <script>
 import { NcDateTimePicker as DateTimePicker } from '@nextcloud/vue'
 import moment from '@nextcloud/moment'
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
 import {
 	getFirstDay,
 } from '@nextcloud/l10n'
 import { getLangConfigForVue2DatePicker } from '../../utils/localization.js'
+import useSettingsStore from '../../store/settings.js'
 
 export default {
 	name: 'TimePicker',
@@ -65,8 +66,8 @@ export default {
 		}
 	},
 	computed: {
-		...mapState({
-			locale: (state) => state.settings.momentLocale,
+		...mapState(useSettingsStore, {
+			locale: 'momentLocale',
 		}),
 		/**
 		 * Returns the lang config for vue2-datepicker

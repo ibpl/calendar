@@ -70,6 +70,9 @@ import { generateOcsUrl } from '@nextcloud/router'
 import { urldecode } from '../../../utils/url.js'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AccountGroupIcon from 'vue-material-design-icons/AccountGroup.vue'
+import usePrincipalsStore from '../../../store/principals.js'
+import useCalendarsStore from '../../../store/calendars.js'
+import { mapStores } from 'pinia'
 
 export default {
 	name: 'SharingSearch',
@@ -92,6 +95,9 @@ export default {
 			usersOrGroups: [],
 		}
 	},
+	computed: {
+		...mapStores(usePrincipalsStore, useCalendarsStore),
+	},
 	methods: {
 		/**
 		 * Share calendar
@@ -104,7 +110,7 @@ export default {
 		 * @param {boolean} data.isCircle is this a circle-group ?
 		 */
 		shareCalendar({ user, displayName, uri, isGroup, isCircle }) {
-			this.$store.dispatch('shareCalendar', {
+			this.calendarsStore.shareCalendar({
 				calendar: this.calendar,
 				user,
 				displayName,
@@ -134,8 +140,8 @@ export default {
 			this.calendar.shares.forEach((share) => {
 				hiddenPrincipalSchemes.push(share.uri)
 			})
-			if (this.$store.getters.getCurrentUserPrincipal) {
-				hiddenUrls.push(this.$store.getters.getCurrentUserPrincipal.url)
+			if (this.principalsStore.getCurrentUserPrincipal) {
+				hiddenUrls.push(this.principalsStore.getCurrentUserPrincipal.url)
 			}
 			if (this.calendar.owner) {
 				hiddenUrls.push(this.calendar.owner)

@@ -68,12 +68,13 @@ import {
 	getDateFromFirstdayParam,
 	modifyDate,
 } from '../../../utils/date.js'
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
 import formatDateRange from '../../../filters/dateRangeFormat.js'
 import DatePicker from '../../Shared/DatePicker.vue'
 import ChevronLeftIcon from 'vue-material-design-icons/ChevronLeft.vue'
 import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import { NcButton } from '@nextcloud/vue'
+import useSettingsStore from '../../../store/settings.js'
 
 export default {
 	name: 'AppNavigationHeaderDatePicker',
@@ -98,8 +99,8 @@ export default {
 		}
 	},
 	computed: {
-		...mapState({
-			locale: (state) => state.settings.momentLocale,
+		...mapState(useSettingsStore, {
+			locale: 'momentLocale',
 		}),
 		selectedDate() {
 			if (this.isWidget) {

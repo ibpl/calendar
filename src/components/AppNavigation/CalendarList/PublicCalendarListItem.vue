@@ -93,6 +93,8 @@ import {
 
 import Download from 'vue-material-design-icons/Download.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
+import useCalendarsStore from '../../../store/calendars.js'
+import { mapStores } from 'pinia'
 
 export default {
 	name: 'PublicCalendarListItem',
@@ -124,6 +126,7 @@ export default {
 		}
 	},
 	computed: {
+		...mapStores(useCalendarsStore),
 		/**
 		 * Download url of the calendar
 		 *
@@ -193,9 +196,10 @@ export default {
 				}, 2000)
 			}
 		},
-		toggleEnabled() {
-			this.$store.commit('toggleCalendarEnabled', {
+		async toggleEnabled() {
+			await this.calendarsStore.toggleCalendarEnabled({
 				calendar: this.calendar,
+				updateDav: false,
 			})
 		},
 	},

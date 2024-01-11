@@ -203,7 +203,9 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import EditIcon from 'vue-material-design-icons/Pencil.vue'
-import { mapState } from 'vuex'
+import { mapState } from 'pinia'
+import useSettingsStore from '../store/settings.js'
+import useWidgetStore from '../store/widget.js'
 
 export default {
 	name: 'EditSimple',
@@ -243,12 +245,13 @@ export default {
 		}
 	},
 	computed: {
-		...mapState({
-			hideEventExport: (state) => state.settings.hideEventExport,
-			widgetEventDetailsOpen: (state) => state.calendars.widgetEventDetailsOpen,
-			widgetEventDetails: (state) => state.calendars.widgetEventDetails,
-			widgetRef: (state) => state.calendars.widgetRef,
-		}),
+		...mapState(useSettingsStore, ['hideEventExport']),
+		...mapState(useWidgetStore, [
+			'hideEventExport',
+			'widgetEventDetailsOpen',
+			'widgetEventDetails',
+			'widgetRef',
+		]),
 
 		showPopover() {
 			return this.isVisible || this.widgetEventDetailsOpen

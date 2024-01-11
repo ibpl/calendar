@@ -63,6 +63,8 @@ import {
 	showInfo,
 } from '@nextcloud/dialogs'
 import { randomId } from '../../../utils/randomId.js'
+import { mapStores } from 'pinia'
+import useCalendarsStore from '../../../store/calendars.js'
 
 export default {
 	name: 'ShareItem',
@@ -92,6 +94,7 @@ export default {
 		}
 	},
 	computed: {
+		...mapStores(useCalendarsStore),
 		uid() {
 			return this._uid
 		},
@@ -120,7 +123,7 @@ export default {
 		async unshare() {
 			this.updatingSharee = true
 			try {
-				await this.$store.dispatch('unshareCalendar', {
+				await this.calendarsStore.unshareCalendar({
 					calendar: this.calendar,
 					uri: this.sharee.uri,
 				})
@@ -140,7 +143,7 @@ export default {
 		async updatePermission() {
 			this.updatingSharee = true
 			try {
-				await this.$store.dispatch('toggleCalendarShareWritable', {
+				await this.calendarsStore.toggleCalendarShareWritable({
 					calendar: this.calendar,
 					uri: this.sharee.uri,
 				})

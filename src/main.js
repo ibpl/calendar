@@ -30,8 +30,6 @@ import '../css/calendar.scss'
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router.js'
-import store from './store/index.js'
-import { sync } from 'vuex-router-sync'
 import { getRequestToken } from '@nextcloud/auth'
 import { linkTo } from '@nextcloud/router'
 import { loadState } from '@nextcloud/initial-state'
@@ -63,8 +61,6 @@ __webpack_nonce__ = btoa(getRequestToken())
 // eslint-disable-next-line
 __webpack_public_path__ = linkTo('calendar', 'js/')
 
-sync(store, router)
-
 Vue.prototype.$t = translate
 Vue.prototype.$n = translatePlural
 
@@ -72,15 +68,14 @@ Vue.prototype.$n = translatePlural
 Vue.prototype.t = translate
 Vue.prototype.n = translatePlural
 
-windowTitleService(router, store)
-
 export default new Vue({
 	el: '#content',
 	router,
-	store,
 	render: h => h(App),
 	pinia,
 })
 
 const appointmentsConfigsStore = useAppointmentConfigsStore()
 appointmentsConfigsStore.addInitialConfigs(loadState('calendar', 'appointmentConfigs', []).map(config => new AppointmentConfig(config)))
+
+windowTitleService(router)
