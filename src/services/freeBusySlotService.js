@@ -100,6 +100,8 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 
 	const events = eventResults.events
 
+	console.log('EVENTS', events)
+
 	let currentCheckedTime = start
 	const currentCheckedTimeEnd = new Date(currentCheckedTime)
 	currentCheckedTimeEnd.setSeconds(currentCheckedTime.getSeconds() + duration)
@@ -107,8 +109,10 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 
 	// more than 1 suggestions is too much
 	// todo: make it 5
-	for (let i = 0; (i < events.length + 1 && i < 1); i++) {
+	for (let i = 0; (i < events.length + 1 && i < 5); i++) {
 		foundSlots[i] = checkTimes(currentCheckedTime, duration, events)
+		console.log('FOUND SLOTS', foundSlots[i], 'ITERATION', i)
+
 
 		if (foundSlots[i].nextEvent !== undefined && foundSlots[i].nextEvent !== null) currentCheckedTime = new Date(foundSlots[i].nextEvent.end)
 		// avoid repetitions caused by events blocking at first iteration of currentCheckedTime
@@ -116,6 +120,7 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 			foundSlots.pop()
 			break
 		}
+		console.log('CURRENT CHECKED TIME', currentCheckedTime, 'NEXT EVENT', foundSlots[i].nextEvent)
 	}
 
 	foundSlots.forEach((slot, index) => {
@@ -235,10 +240,14 @@ function checkTimes(currentCheckedTime, duration, events) {
 		} else break
 	}
 
+	console.log('BLOCKING EVENT', blockingEvent)
+
 	if (blockingEvent !== null) {
 		const blockingIndex = events.findIndex((event) => event === blockingEvent)
+		console.log('BLOCKING INDEX', blockingIndex)
 
 		nextEvent = events[blockingIndex + 1]
+		console.log('NEXT EVENT IN CHECK TIMES', nextEvent)
 	} else {
 		if (events.length > 0) nextEvent = events[0]
 	}
