@@ -98,7 +98,7 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 		return [{ error: eventResults.error }]
 	}
 
-	const events = eventResults.events
+	const events = sortEvents(eventResults.events)
 
 	console.log('EVENTS', events)
 
@@ -107,32 +107,35 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 	currentCheckedTimeEnd.setSeconds(currentCheckedTime.getSeconds() + duration)
 	const foundSlots = []
 
-	// more than 1 suggestions is too much
 	// todo: make it 5
-	for (let i = 0; (i < events.length + 1 && i < 5); i++) {
+	for (let i = 0; (i < events.length + 1); i++) {
 		foundSlots[i] = checkTimes(currentCheckedTime, duration, events)
 		console.log('FOUND SLOTS', foundSlots[i], 'ITERATION', i)
 
 
 		if (foundSlots[i].nextEvent !== undefined && foundSlots[i].nextEvent !== null) currentCheckedTime = new Date(foundSlots[i].nextEvent.end)
 		// avoid repetitions caused by events blocking at first iteration of currentCheckedTime
-		if (foundSlots[i]?.start === foundSlots[i - 1]?.start) {
-			foundSlots.pop()
-			break
+		if (foundSlots[i]?.start === foundSlots[i - 1]?.start && foundSlots[i] !== undefined) {
+			foundSlots[i].start = null
 		}
 		console.log('CURRENT CHECKED TIME', currentCheckedTime, 'NEXT EVENT', foundSlots[i].nextEvent)
 	}
 
-	foundSlots.forEach((slot, index) => {
-		const roundedTime = roundTime(slot.start, slot.end, slot.blockingEvent, duration)
+	let roundedSlots = []
 
-		foundSlots[index].start = roundedTime.start
-		foundSlots[index].end = roundedTime.end
-		// not needed anymore
-		foundSlots[index].nextEvent = undefined
+	foundSlots.forEach((slot, index) => {
+		const roundedTime = roundTime(slot.start, slot.end, slot.blockingEvent, slot.nextEvent, duration)
+		console.log('ROUNDED TIME', roundedTime, 'INDEX', index)
+
+		if (roundedTime !== null) {
+			roundedSlots.push({
+				start: roundedTime.start,
+				end: roundedTime.end,
+			})
+		}
 	})
 
-	return foundSlots
+	return roundedSlots
 }
 
 /**
@@ -155,9 +158,11 @@ function getDurationInSeconds(start, end) {
  * @param currentCheckedTime
  * @param currentCheckedTimeEnd
  * @param blockingEvent
+ * @param nextEvent
  * @param duration
  */
-function roundTime(currentCheckedTime, currentCheckedTimeEnd, blockingEvent, duration) {
+function roundTime(currentCheckedTime, currentCheckedTimeEnd, blockingEvent, nextEvent, duration) {
+	if (currentCheckedTime === null || nextEvent === undefined) return null
 	if (!blockingEvent) return { start: currentCheckedTime, end: currentCheckedTimeEnd }
 
 	// make sure that difference between currentCheckedTime and blockingEvent.end is at least 15 minutes
@@ -181,6 +186,13 @@ function roundTime(currentCheckedTime, currentCheckedTimeEnd, blockingEvent, dur
 	// update currentCheckedTimeEnd again since currentCheckedTime was updated
 	currentCheckedTimeEnd = new Date(currentCheckedTime)
 	currentCheckedTimeEnd.setSeconds(currentCheckedTime.getSeconds() + duration)
+
+
+	// if the rounding of the the event doesn't conflict with the start of the next one
+	console.log('NEXT EVENT IN ROUND TIME', new Date(nextEvent.start), 'CURRENT CHECKED TIME END', currentCheckedTimeEnd, 'BOOL', currentCheckedTimeEnd > new Date(nextEvent.start))
+	if (currentCheckedTimeEnd > new Date(nextEvent.start)) {
+		return null
+	}
 
 	return { start: currentCheckedTime, end: currentCheckedTimeEnd }
 }
@@ -253,4 +265,9 @@ function checkTimes(currentCheckedTime, duration, events) {
 	}
 
 	return { start: currentCheckedTime, end: currentCheckedTimeEnd, nextEvent, blockingEvent }
+}
+
+//make a function that sorts a list of objects by the "start" property
+function sortEvents(events) {
+	return events.sort((a, b) => new Date(a.start) - new Date(b.start))
 }
