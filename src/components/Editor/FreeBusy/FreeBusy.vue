@@ -506,6 +506,8 @@ export default {
 			// have to make these "selected" version of the props seeing as they can't be modified directly, and they aren't updated reactively when vuex is
 			this.currentStart = slot.start
 			this.currentEnd = slot.end
+			let clonedDate = new Date(slot.start) //so as not to modify slot.start
+			this.currentDate = new Date(clonedDate.setHours(0, 0, 0, 0))
 		},
 	},
 }

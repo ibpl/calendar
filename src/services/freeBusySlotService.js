@@ -106,9 +106,13 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 	const currentCheckedTimeEnd = new Date(currentCheckedTime)
 	currentCheckedTimeEnd.setSeconds(currentCheckedTime.getSeconds() + duration)
 	const foundSlots = []
+	let offset = 1
 
-	// todo: make it 5
-	for (let i = 0; (i < events.length + 1); i++) {
+	if (new Date(events[0]?.start) < currentCheckedTime) {
+		offset = 0
+	}
+
+	for (let i = 0; (i < events.length + offset); i++) {
 		foundSlots[i] = checkTimes(currentCheckedTime, duration, events)
 		console.log('FOUND SLOTS', foundSlots[i], 'ITERATION', i)
 
@@ -162,7 +166,7 @@ function getDurationInSeconds(start, end) {
  * @param duration
  */
 function roundTime(currentCheckedTime, currentCheckedTimeEnd, blockingEvent, nextEvent, duration) {
-	if (currentCheckedTime === null || nextEvent === undefined) return null
+	if (currentCheckedTime === null) return null
 	if (!blockingEvent) return { start: currentCheckedTime, end: currentCheckedTimeEnd }
 
 	// make sure that difference between currentCheckedTime and blockingEvent.end is at least 15 minutes
@@ -188,9 +192,9 @@ function roundTime(currentCheckedTime, currentCheckedTimeEnd, blockingEvent, nex
 	currentCheckedTimeEnd.setSeconds(currentCheckedTime.getSeconds() + duration)
 
 
-	// if the rounding of the the event doesn't conflict with the start of the next one
-	console.log('NEXT EVENT IN ROUND TIME', new Date(nextEvent.start), 'CURRENT CHECKED TIME END', currentCheckedTimeEnd, 'BOOL', currentCheckedTimeEnd > new Date(nextEvent.start))
-	if (currentCheckedTimeEnd > new Date(nextEvent.start)) {
+	// if the rounding of the event doesn't conflict with the start of the next one
+	console.log('NEXT EVENT IN ROUND TIME', new Date(nextEvent?.start), 'CURRENT CHECKED TIME END', currentCheckedTimeEnd, 'BOOL', currentCheckedTimeEnd > new Date(nextEvent?.start))
+	if (currentCheckedTimeEnd > new Date(nextEvent?.start)) {
 		return null
 	}
 
