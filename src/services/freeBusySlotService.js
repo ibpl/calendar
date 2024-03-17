@@ -89,9 +89,9 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 		duration = 86400 // one day
 	}
 
-	// for now search slots only in the first five days
+	// for now search slots only in the first week days
 	const endSearchDate = new Date(start)
-	endSearchDate.setDate(start.getDate() + 5)
+	endSearchDate.setDate(start.getDate() + 7)
 	const eventResults = await getBusySlots(organizer, attendees, start, endSearchDate, timeZoneId)
 
 	if (eventResults.error) {
@@ -112,7 +112,7 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 		offset = 0
 	}
 
-	for (let i = 0; (i < events.length + offset); i++) {
+	for (let i = 0; (i < events.length + offset && i < 5); i++) {
 		foundSlots[i] = checkTimes(currentCheckedTime, duration, events)
 		console.log('FOUND SLOTS', foundSlots[i], 'ITERATION', i)
 
@@ -131,7 +131,7 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 		const roundedTime = roundTime(slot.start, slot.end, slot.blockingEvent, slot.nextEvent, duration)
 		console.log('ROUNDED TIME', roundedTime, 'INDEX', index)
 
-		if (roundedTime !== null) {
+		if (roundedTime !== null && roundedTime.start < endSearchDate) {
 			roundedSlots.push({
 				start: roundedTime.start,
 				end: roundedTime.end,
