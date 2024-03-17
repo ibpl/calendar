@@ -100,8 +100,6 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 
 	const events = sortEvents(eventResults.events)
 
-	console.log('EVENTS', events)
-
 	let currentCheckedTime = start
 	const currentCheckedTimeEnd = new Date(currentCheckedTime)
 	currentCheckedTimeEnd.setSeconds(currentCheckedTime.getSeconds() + duration)
@@ -114,22 +112,18 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 
 	for (let i = 0; (i < events.length + offset && i < 5); i++) {
 		foundSlots[i] = checkTimes(currentCheckedTime, duration, events)
-		console.log('FOUND SLOTS', foundSlots[i], 'ITERATION', i)
-
 
 		if (foundSlots[i].nextEvent !== undefined && foundSlots[i].nextEvent !== null) currentCheckedTime = new Date(foundSlots[i].nextEvent.end)
 		// avoid repetitions caused by events blocking at first iteration of currentCheckedTime
 		if (foundSlots[i]?.start === foundSlots[i - 1]?.start && foundSlots[i] !== undefined) {
 			foundSlots[i].start = null
 		}
-		console.log('CURRENT CHECKED TIME', currentCheckedTime, 'NEXT EVENT', foundSlots[i].nextEvent)
 	}
 
 	let roundedSlots = []
 
 	foundSlots.forEach((slot, index) => {
 		const roundedTime = roundTime(slot.start, slot.end, slot.blockingEvent, slot.nextEvent, duration)
-		console.log('ROUNDED TIME', roundedTime, 'INDEX', index)
 
 		if (roundedTime !== null && roundedTime.start < endSearchDate) {
 			roundedSlots.push({
@@ -193,7 +187,6 @@ function roundTime(currentCheckedTime, currentCheckedTimeEnd, blockingEvent, nex
 
 
 	// if the rounding of the event doesn't conflict with the start of the next one
-	console.log('NEXT EVENT IN ROUND TIME', new Date(nextEvent?.start), 'CURRENT CHECKED TIME END', currentCheckedTimeEnd, 'BOOL', currentCheckedTimeEnd > new Date(nextEvent?.start))
 	if (currentCheckedTimeEnd > new Date(nextEvent?.start)) {
 		return null
 	}
@@ -256,14 +249,10 @@ function checkTimes(currentCheckedTime, duration, events) {
 		} else break
 	}
 
-	console.log('BLOCKING EVENT', blockingEvent)
-
 	if (blockingEvent !== null) {
 		const blockingIndex = events.findIndex((event) => event === blockingEvent)
-		console.log('BLOCKING INDEX', blockingIndex)
 
 		nextEvent = events[blockingIndex + 1]
-		console.log('NEXT EVENT IN CHECK TIMES', nextEvent)
 	} else {
 		if (events.length > 0) nextEvent = events[0]
 	}
