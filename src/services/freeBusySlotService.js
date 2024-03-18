@@ -110,13 +110,16 @@ export async function getFirstFreeSlot(organizer, attendees, start, end, timeZon
 		offset = 0
 	}
 
-	for (let i = 0; (i < events.length + offset && i < 5); i++) {
+	for (let i = 0; i < events.length + offset && i < 5; i++) {
 		foundSlots[i] = checkTimes(currentCheckedTime, duration, events)
 
-		if (foundSlots[i].nextEvent !== undefined && foundSlots[i].nextEvent !== null) currentCheckedTime = new Date(foundSlots[i].nextEvent.end)
+		if (foundSlots[i].nextEvent !== undefined && foundSlots[i].nextEvent !== null) {
+			currentCheckedTime = new Date(foundSlots[i].nextEvent.end)
+		}
 		// avoid repetitions caused by events blocking at first iteration of currentCheckedTime
 		if (foundSlots[i]?.start === foundSlots[i - 1]?.start && foundSlots[i] !== undefined) {
-			foundSlots[i].start = null
+			foundSlots[i] = {}
+			break
 		}
 	}
 
