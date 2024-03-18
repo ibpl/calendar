@@ -168,7 +168,7 @@ import HelpCircleIcon from 'vue-material-design-icons/HelpCircle.vue'
 import InviteesListSearch from '../Invitees/InviteesListSearch.vue'
 
 import { getColorForFBType } from '../../../utils/freebusy.js'
-import { getFirstFreeSlot } from '../../../services/freeBusySlotService.js'
+import { getFirstFreeSlot, getBusySlots } from '../../../services/freeBusySlotService.js'
 import dateFormat from '../../../filters/dateFormat.js'
 
 export default {
@@ -477,12 +477,22 @@ export default {
 			endSearch.setYear(this.currentDate.getFullYear())
 
 			try {
-				const freeSlots = await getFirstFreeSlot(
+				// for now search slots only in the first week days
+				const endSearchDate = new Date(startSearch)
+				endSearchDate.setDate(startSearch.getDate() + 7)
+				const eventResults = await getBusySlots(
 					this.organizer.attendeeProperty,
 					this.attendees.map((a) => a.attendeeProperty),
 					startSearch,
+					endSearchDate,
+					this.timeZoneId
+				)
+
+				const freeSlots = getFirstFreeSlot(
+					startSearch,
 					endSearch,
-					this.timezoneId,
+					eventResults,
+					endSearchDate,
 				)
 
 				freeSlots.forEach((slot) => {
