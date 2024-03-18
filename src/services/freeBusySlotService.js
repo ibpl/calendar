@@ -74,31 +74,26 @@ export async function getBusySlots(organizer, attendees, start, end, timeZoneId)
 }
 
 /**
- * Get the first available slot for an event using freebusy API
+ * Get the first available slot for an event using the freebusy API
  *
- * @param {AttendeeProperty} organizer The organizer of the event
- * @param {AttendeeProperty[]} attendees Array of the event's attendees
+
  * @param {Date} start The start date and time of the event
  * @param {Date} end The end date and time of the event
- * @param timeZoneId TimezoneId of the user
- * @return {Promise<[]>}
+ * @param retrievedEvents Events found by the freebusy API
+ * @param endSearchDate The date to stop searching for free slots (after one week)
+ * @return {<[]>}
  */
-export async function getFirstFreeSlot(organizer, attendees, start, end, timeZoneId) {
+export function getFirstFreeSlot(start, end, retrievedEvents, endSearchDate) {
 	let duration = getDurationInSeconds(start, end)
 	if (duration === 0) {
 		duration = 86400 // one day
 	}
 
-	// for now search slots only in the first week days
-	const endSearchDate = new Date(start)
-	endSearchDate.setDate(start.getDate() + 7)
-	const eventResults = await getBusySlots(organizer, attendees, start, endSearchDate, timeZoneId)
-
-	if (eventResults.error) {
-		return [{ error: eventResults.error }]
+	if (retrievedEvents.error) {
+		return [{ error: retrievedEvents.error }]
 	}
 
-	const events = sortEvents(eventResults.events)
+	const events = sortEvents(retrievedEvents.events)
 
 	let currentCheckedTime = start
 	const currentCheckedTimeEnd = new Date(currentCheckedTime)
@@ -265,5 +260,16 @@ function checkTimes(currentCheckedTime, duration, events) {
 
 //make a function that sorts a list of objects by the "start" property
 function sortEvents(events) {
-	return events.sort((a, b) => new Date(a.start) - new Date(b.start))
+	//remove events that have the same start and end time, if not done causes problems
+	const mappedEvents = new Map();
+
+	for (const obj of events) {
+		const key = obj.start.toString() + obj.end.toString();
+
+		if (!mappedEvents.has(key)) {
+			mappedEvents.set(key, obj);
+		}
+	}
+
+	return Array.from(mappedEvents.values()).sort((a, b) => new Date(a.start) - new Date(b.start))
 }
