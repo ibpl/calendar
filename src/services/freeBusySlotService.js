@@ -33,7 +33,6 @@ import logger from '../utils/logger.js'
  * @param {AttendeeProperty[]} attendees Array of the event's attendees
  * @param {Date} start The start date and time of the event
  * @param {Date} end The end date and time of the event
- * @param timeZone Timezone of the user
  * @param timeZoneId
  * @return {Promise<>}
  */
@@ -80,20 +79,21 @@ export async function getBusySlots(organizer, attendees, start, end, timeZoneId)
  * @param {Date} start The start date and time of the event
  * @param {Date} end The end date and time of the event
  * @param retrievedEvents Events found by the freebusy API
- * @param endSearchDate The date to stop searching for free slots (after one week)
- * @return {<[]>}
+ * @return []
  */
-export function getFirstFreeSlot(start, end, retrievedEvents, endSearchDate) {
+export function getFirstFreeSlot(start, end, retrievedEvents) {
 	let duration = getDurationInSeconds(start, end)
 	if (duration === 0) {
 		duration = 86400 // one day
 	}
+	const endSearchDate = new Date(start)
+	endSearchDate.setDate(start.getDate() + 7)
 
 	if (retrievedEvents.error) {
 		return [{ error: retrievedEvents.error }]
 	}
 
-	const events = sortEvents(retrievedEvents.events)
+	const events = sortEvents(retrievedEvents)
 
 	let currentCheckedTime = start
 	const currentCheckedTimeEnd = new Date(currentCheckedTime)
@@ -120,7 +120,7 @@ export function getFirstFreeSlot(start, end, retrievedEvents, endSearchDate) {
 
 	let roundedSlots = []
 
-	foundSlots.forEach((slot, index) => {
+	foundSlots.forEach((slot) => {
 		const roundedTime = roundTime(slot.start, slot.end, slot.blockingEvent, slot.nextEvent, duration)
 
 		if (roundedTime !== null && roundedTime.start < endSearchDate) {
@@ -138,6 +138,7 @@ export function getFirstFreeSlot(start, end, retrievedEvents, endSearchDate) {
  *
  * @param start
  * @param end
+ * @return {number}
  */
 function getDurationInSeconds(start, end) {
 	// convert dates to UTC to account for daylight saving time

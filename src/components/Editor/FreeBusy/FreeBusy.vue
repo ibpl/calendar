@@ -491,8 +491,7 @@ export default {
 				const freeSlots = getFirstFreeSlot(
 					startSearch,
 					endSearch,
-					eventResults,
-					endSearchDate,
+					eventResults.events,
 				)
 
 				freeSlots.forEach((slot) => {
