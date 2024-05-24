@@ -1,27 +1,50 @@
 <template>
-	<NcModal size="large"
+	<NcDialog size="large"
 		:name="t('calendar', 'Availability of rooms')"
-		@close="closeRoomAvailability">
+		@closing="$emit('close')">
 		<div class="modal__content__header">
 			<h2>{{ t('calendar', 'Find a room') }}</h2>
-			<div v-for="room in rooms" :key="room.id">
-				<p>{{ room.displayName }}</p>
+			<div>
+				<div v-for="room in rooms" :key="room.id">
+					<p>{{ room.displayName }}</p>
+				</div>
 			</div>
 			<div class="busy_button">
-				<NcButton @click="findRoomAvailiability">
-					{{ t('calendar',' Check room availability') }}
+				<NcButton @click="openRoomAvailability">
+					{{ t('calendar', 'Check room availability') }}
 				</NcButton>
 			</div>
+			<RoomAvailabilityModal v-if="showRoomAvailabilityModel"
+				:start-date="calendarObjectInstance.startDate"
+				:end-date="calendarObjectInstance.endDate"
+				:rooms="calendarObjectInstance.rooms"
+				:calendar-object-instance="calendarObjectInstance" />
 		</div>
-	</NcModal>
+	</NcDialog>
 </template>
 <script>
-import { NcModal, NcButton } from '@nextcloud/vue'
+import { NcButton, NcDialog } from '@nextcloud/vue'
+import RoomAvailabilityModal from './RoomAvailabilityModal.vue'
 export default {
 	name: 'RoomAvailability',
 	components: {
-		NcModal,
 		NcButton,
+		NcDialog,
+		RoomAvailabilityModal,
+	},
+	props: {
+		calendarObjectInstance: {
+			type: Object,
+			required: true,
+		},
+		startDate: {
+			type: Date,
+			required: true,
+		},
+		endDate: {
+			type: Date,
+			required: true,
+		},
 	},
 	data() {
 		return {
@@ -34,15 +57,78 @@ export default {
 		},
 	},
 	methods: {
-		closeRoomAvailability() {
-			this.showRoomAvailabilityModel = false
-		},
-		findRoomAvailiability() {
-			//
+		openRoomAvailability() {
+			this.showRoomAvailabilityModel = true
 		},
 	},
 }
 </script>
 <style scoped lang="scss">
+.icon-close {
+	display: block;
+	height: 100%;
+}
+.modal__content {
+	padding: 50px;
+	//when the calendar is open, it's cut at the bottom, adding a margin fixes it
+	margin-bottom: 95px;
+	&__actions{
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 20px;
+		&__select{
+			width: 260px;
+		}
+		&__date{
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			& > *{
+				margin-left: 5px;
+			}
+		}
+	}
+	&__header{
+		h3{
+			font-weight: 500;
+		}
+		margin-bottom: 20px;
+		&__attendees{
+			&__user-bubble{
+				margin-right: 5px;
+			}
+		}
+	}
+	&__footer{
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 20px;
+		&__title{
+			h3{
+				font-weight: 500;
+			}
+			&__timezone{
+				color: var(--color-text-lighter);
+			}
+		}
+	}
+}
+:deep(.vs__search ) {
+	text-overflow: ellipsis;
+}
+:deep(.mx-input) {
+	height: 38px !important;
+}
+</style>
+<style lang="scss">
+.blocking-event-free-busy {
+	// Show the blocking event above any other blocks, especially the *blocked for all* one
+	z-index: 3 !important;
+}
 
+.free-busy-block {
+	opacity: 0.7 !important;
+}
 </style>
