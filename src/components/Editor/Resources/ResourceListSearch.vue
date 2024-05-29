@@ -25,7 +25,7 @@
 		<NcButton @click="openRoomAvailability">
 			{{ t('calendar', 'Check rooms availability') }}
 		</NcButton>
-		<RoomAvailability v-if="showRoomAvailabilityModel"
+		<RoomAvailabilityList v-if="showRoomAvailabilityModel"
 			:calendar-object-instance="calendarObjectInstance" />
 		<NcSelect class="resource-search__multiselect"
 			:options="matches"
@@ -96,12 +96,12 @@ import logger from '../../../utils/logger.js'
 import { advancedPrincipalPropertySearch } from '../../../services/caldavService.js'
 import ResourceSeatingCapacity from './ResourceSeatingCapacity.vue'
 import ResourceRoomType from './ResourceRoomType.vue'
-import RoomAvailability from '../FreeBusy/RoomAvailability.vue'
+import RoomAvailabilityList from '../FreeBusy/RoomAvailabilityList.vue'
 
 export default {
 	name: 'ResourceListSearch',
 	components: {
-		RoomAvailability,
+		RoomAvailabilityList,
 		Avatar,
 		NcButton,
 		NcSelect,

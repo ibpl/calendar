@@ -58,6 +58,7 @@ import FullCalendar from '@fullcalendar/vue'
 import { getDateFormattingConfig } from '../../../fullcalendar/localization/dateFormattingConfig.js'
 import { getBusySlots, getFirstFreeSlot } from '../../../services/freeBusySlotService.js'
 import dateFormat from '../../../filters/dateFormat.js'
+import { getColorForFBType } from '../../../utils/freebusy.js'
 export default {
 	name: 'RoomAvailabilityModal',
 	components: {
@@ -99,6 +100,31 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * List of possible Free-Busy values.
+		 * This is used as legend.
+		 *
+		 * @return {({color: string, label: string})[]}
+		 */
+		colorCaption() {
+			return [{
+				// TRANSLATORS: free as in available
+				label: this.$t('calendar', 'Free'),
+				color: getColorForFBType('FREE'),
+			}, {
+				label: this.$t('calendar', 'Busy (tentative)'),
+				color: getColorForFBType('BUSY-TENTATIVE'),
+			}, {
+				label: this.$t('calendar', 'Busy'),
+				color: getColorForFBType('BUSY'),
+			}, {
+				label: this.$t('calendar', 'Out of office'),
+				color: getColorForFBType('BUSY-UNAVAILABLE'),
+			}, {
+				label: this.$t('calendar', 'Unknown'),
+				color: getColorForFBType('UNKNOWN'),
+			}]
+		},
 		options() {
 			return {
 				// Initialization:

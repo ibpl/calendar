@@ -1,7 +1,8 @@
 <template>
-	<NcDialog size="large"
+	<NcDialog v-if="showDialog"
+		size="large"
 		:name="t('calendar', 'Availability of rooms')"
-		@closing="$emit('close')">
+		@closing="handleClose">
 		<div class="modal__content__header">
 			<h2>{{ t('calendar', 'Find a room') }}</h2>
 			<div>
@@ -26,7 +27,7 @@
 import { NcButton, NcDialog } from '@nextcloud/vue'
 import RoomAvailabilityModal from './RoomAvailabilityModal.vue'
 export default {
-	name: 'RoomAvailability',
+	name: 'RoomAvailabilityList',
 	components: {
 		NcButton,
 		NcDialog,
@@ -49,6 +50,7 @@ export default {
 	data() {
 		return {
 			showRoomAvailabilityModel: false,
+			showDialog: true,
 		}
 	},
 	computed: {
@@ -59,6 +61,10 @@ export default {
 	methods: {
 		openRoomAvailability() {
 			this.showRoomAvailabilityModel = true
+		},
+		handleClose() {
+			this.showDialog = false
+
 		},
 	},
 }
