@@ -70,7 +70,6 @@ import { getDateFormattingConfig } from '../../../fullcalendar/localization/date
 import { getBusySlots, getFirstFreeSlot } from '../../../services/freeBusySlotService.js'
 import dateFormat from '../../../filters/dateFormat.js'
 import { getColorForFBType } from '../../../utils/freebusy.js'
-import InviteesListSearch from '../Invitees/InviteesListSearch.vue'
 import { mapGetters, mapState } from 'vuex'
 import resourceTimelinePlugin from '@fullcalendar/resource-timeline'
 import momentPluginFactory from '../../../fullcalendar/localization/momentPlugin.js'
@@ -79,6 +78,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import ChevronLeftIcon from 'vue-material-design-icons/ChevronLeft.vue'
 import HelpCircleIcon from 'vue-material-design-icons/HelpCircle.vue'
+import { getCurrentUserPrincipal } from '../../../services/caldavService.js'
 export default {
 	name: 'RoomAvailabilityModal',
 	components: {
@@ -223,9 +223,6 @@ export default {
 		},
 	},
 	methods: {
-		closeRoomAvailability() {
-			this.showModal = false
-		},
 		handleActions(action, date = null) {
 			const calendar = this.$refs.freeBusyFullCalendar.getApi()
 			switch (action) {
@@ -268,8 +265,8 @@ export default {
 				const endSearchDate = new Date(startSearch)
 				endSearchDate.setDate(startSearch.getDate() + 7)
 				const eventResults = await getBusySlots(
-					this.organizer.roomProperty,
-					this.rooms.map((a) => a.roomProperty),
+					getCurrentUserPrincipal(),
+					this.rooms,
 					startSearch,
 					endSearchDate,
 					this.timeZoneId,
