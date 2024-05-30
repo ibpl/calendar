@@ -6,20 +6,20 @@
 		<div class="modal__content__header">
 			<h2>{{ t('calendar', 'Find a room') }}</h2>
 			<div>
-				<div v-for="room in rooms" :key="room.id">
-					<p>{{ room.displayName }}</p>
+				<div v-for="room in rooms" :key="room.id" class="rooms">
+					<p>{{ room.displayname }}</p>
+					<NcButton @click="openRoomAvailability">
+						{{ t('calendar', 'Check room availability') }}
+					</NcButton>
 				</div>
-			</div>
-			<div class="busy_button">
-				<NcButton @click="openRoomAvailability">
-					{{ t('calendar', 'Check room availability') }}
-				</NcButton>
 			</div>
 			<RoomAvailabilityModal v-if="showRoomAvailabilityModel"
 				:start-date="calendarObjectInstance.startDate"
 				:end-date="calendarObjectInstance.endDate"
 				:rooms="calendarObjectInstance.rooms"
-				:calendar-object-instance="calendarObjectInstance" />
+				:calendar-object-instance="calendarObjectInstance"
+				:organizer="calendarObjectInstance.organizer"
+				@close="closeFreeBusy" />
 		</div>
 	</NcDialog>
 </template>
@@ -64,7 +64,9 @@ export default {
 		},
 		handleClose() {
 			this.showDialog = false
-
+		},
+		closeFreeBusy() {
+			this.showRoomAvailabilityModel = false
 		},
 	},
 }
@@ -136,5 +138,8 @@ export default {
 
 .free-busy-block {
 	opacity: 0.7 !important;
+}
+.rooms {
+	display: flex;
 }
 </style>

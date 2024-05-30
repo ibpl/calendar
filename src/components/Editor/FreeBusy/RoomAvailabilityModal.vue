@@ -2,6 +2,16 @@
 	<NcModal size="large"
 		:name="t('calendar', 'Check room availability')"
 		@closing="$emit('close')">
+		<div class="modal__content modal--scheduler">
+			<div class="modal__content__header">
+				<h2>{{ $t('calendar', 'Find a time') }}</h2>
+				<NcUserBubble v-for="room in rooms"
+					:key="room.id"
+					size="24"
+					class="modal__content__header__rooms__user-bubble"
+					:display-name="room.commonName" />
+			</div>
+		</div>
 		<div class="modal__content__actions">
 			<div class="modal__content__actions__date">
 				<NcButton type="secondary"
@@ -20,6 +30,7 @@
 						<ChevronRightIcon :size="20" />
 					</template>
 				</NcButton>
+
 				<NcDateTimePickerNative :hide-label="true"
 					:value="currentDate"
 					@input="(date)=>handleActions('picker', date)" />
@@ -37,7 +48,7 @@
 							<div class="freebusy-caption__colors">
 								<div v-for="color in colorCaption" :key="color.color" class="freebusy-caption-item">
 									<div class="freebusy-caption-item__color" :style="{ 'background-color': color.color }" />
-									<div class="freebusy-caption-item__label">
+									<div class="fregetebusy-caption-item__label">
 										{{ color.label }}
 									</div>
 								</div>
@@ -52,16 +63,29 @@
 	</NcModal>
 </template>
 <script>
-import { NcButton, NcDateTimePickerNative, NcModal, NcPopover } from '@nextcloud/vue'
+import { NcButton, NcDateTimePickerNative, NcModal, NcPopover, NcUserBubble } from '@nextcloud/vue'
 import { getFullCalendarLocale } from '../../../fullcalendar/localization/localeProvider.js'
 import FullCalendar from '@fullcalendar/vue'
 import { getDateFormattingConfig } from '../../../fullcalendar/localization/dateFormattingConfig.js'
 import { getBusySlots, getFirstFreeSlot } from '../../../services/freeBusySlotService.js'
 import dateFormat from '../../../filters/dateFormat.js'
 import { getColorForFBType } from '../../../utils/freebusy.js'
+import InviteesListSearch from '../Invitees/InviteesListSearch.vue'
+import { mapGetters, mapState } from 'vuex'
+import resourceTimelinePlugin from '@fullcalendar/resource-timeline'
+import momentPluginFactory from '../../../fullcalendar/localization/momentPlugin.js'
+import VTimezoneNamedTimezone from '../../../fullcalendar/timezones/vtimezoneNamedTimezoneImpl.js'
+import interactionPlugin from '@fullcalendar/interaction'
+import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
+import ChevronLeftIcon from 'vue-material-design-icons/ChevronLeft.vue'
+import HelpCircleIcon from 'vue-material-design-icons/HelpCircle.vue'
 export default {
 	name: 'RoomAvailabilityModal',
 	components: {
+		NcUserBubble,
+		ChevronRightIcon,
+		ChevronLeftIcon,
+		HelpCircleIcon,
 		NcPopover,
 		NcModal,
 		FullCalendar,
@@ -78,6 +102,10 @@ export default {
 			required: true,
 		},
 		calendarObjectInstance: {
+			type: Object,
+			required: true,
+		},
+		organizer: {
 			type: Object,
 			required: true,
 		},
@@ -100,6 +128,32 @@ export default {
 		}
 	},
 	computed: {
+		...mapGetters({
+			timezoneId: 'getResolvedTimezone',
+		}),
+		...mapState({
+			showWeekends: state => state.settings.showWeekends,
+			showWeekNumbers: state => state.settings.showWeekNumbers,
+			timezone: state => state.settings.timezone,
+		}),
+		/**
+		 * FullCalendar Plugins
+		 *
+		 * @return {(PluginDef)[]}
+		 */
+		plugins() {
+			return [
+				resourceTimelinePlugin,
+				momentPluginFactory(this.$store),
+				VTimezoneNamedTimezone,
+				interactionPlugin,
+			]
+		},
+		scrollTime() {
+			const options = { hour: '2-digit', minute: '2-digit', seconds: '2-digit', hour12: false }
+
+			return this.currentDate.getHours() > 0 ? new Date(this.currentDate.getTime() - 60 * 60 * 1000).toLocaleTimeString(this.lang, options) : '10:00:00'
+		},
 		/**
 		 * List of possible Free-Busy values.
 		 * This is used as legend.
@@ -150,7 +204,7 @@ export default {
 				resourceAreaColumns: [
 					{
 						field: 'title',
-						headerContent: 'Attendees',
+						headerContent: 'Room',
 					},
 				],
 				// Timezones:
@@ -214,8 +268,8 @@ export default {
 				const endSearchDate = new Date(startSearch)
 				endSearchDate.setDate(startSearch.getDate() + 7)
 				const eventResults = await getBusySlots(
-					this.organizer.attendeeProperty,
-					this.attendees.map((a) => a.attendeeProperty),
+					this.organizer.roomProperty,
+					this.rooms.map((a) => a.roomProperty),
 					startSearch,
 					endSearchDate,
 					this.timeZoneId,
@@ -272,11 +326,6 @@ export default {
 			font-weight: 500;
 		}
 		margin-bottom: 20px;
-		&__attendees{
-			&__user-bubble{
-				margin-right: 5px;
-			}
-		}
 	}
 	&__footer{
 		display: flex;
