@@ -119,6 +119,7 @@ import useFetchedTimeRangesStore from '../store/fetchedTimeRanges.js'
 import useCalendarsStore from '../store/calendars.js'
 import usePrincipalsStore from '../store/principals.js'
 import useSettingsStore from '../store/settings.js'
+import useWidgetStore from '../store/widget.js'
 import { mapStores, mapState } from 'pinia'
 
 export default {
@@ -170,7 +171,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapStores(useFetchedTimeRangesStore, useCalendarsStore, usePrincipalsStore, useSettingsStore),
+		...mapStores(useFetchedTimeRangesStore, useCalendarsStore, usePrincipalsStore, useSettingsStore, useWidgetStore),
 		...mapState(useSettingsStore, {
 			timezoneId: 'getResolvedTimezone',
 		}),
@@ -208,7 +209,7 @@ export default {
 			return this.$route.name.startsWith('Embed')
 		},
 		showWidgetEventDetails() {
-			return this.$store.getters.widgetEventDetailsOpen && this.$refs.calendarGridWidget.$el === this.$store.getters.widgetRef
+			return this.widgetStore.widgetEventDetailsOpen && this.$refs.calendarGridWidget.$el === this.widgetStore.widgetRef
 		},
 		showHeader() {
 			return this.isPublicShare && this.isEmbedded && this.isWidget

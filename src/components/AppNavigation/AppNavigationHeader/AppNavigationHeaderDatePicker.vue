@@ -68,13 +68,14 @@ import {
 	getDateFromFirstdayParam,
 	modifyDate,
 } from '../../../utils/date.js'
-import { mapState } from 'pinia'
+import { mapState, mapStores } from 'pinia'
 import formatDateRange from '../../../filters/dateRangeFormat.js'
 import DatePicker from '../../Shared/DatePicker.vue'
 import ChevronLeftIcon from 'vue-material-design-icons/ChevronLeft.vue'
 import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import { NcButton } from '@nextcloud/vue'
 import useSettingsStore from '../../../store/settings.js'
+import useWidgetStore from '../../../store/widget.js'
 
 export default {
 	name: 'AppNavigationHeaderDatePicker',
@@ -99,12 +100,13 @@ export default {
 		}
 	},
 	computed: {
+		...mapStores(useWidgetStore),
 		...mapState(useSettingsStore, {
 			locale: 'momentLocale',
 		}),
 		selectedDate() {
 			if (this.isWidget) {
-				return getDateFromFirstdayParam(this.$store.getters.widgetDate)
+				return getDateFromFirstdayParam(this.widgetStore.widgetDate)
 			}
 			return getDateFromFirstdayParam(this.$route.params?.firstDay ?? 'now')
 		},
@@ -154,7 +156,7 @@ export default {
 		},
 		view() {
 			if (this.isWidget) {
-				return this.$store.getters.widgetView
+				return this.widgetStore.widgetView
 			}
 			return this.$route.params.view
 		},
@@ -208,7 +210,7 @@ export default {
 		},
 		navigateToDate(date) {
 			if (this.isWidget) {
-				this.$store.commit('setWidgetDate', { widgetDate: getYYYYMMDDFromDate(date) })
+				this.widgetStore.setWidgetDate({ widgetDate: getYYYYMMDDFromDate(date) })
 			} else {
 				const name = this.$route.name
 				const params = Object.assign({}, this.$route.params, {

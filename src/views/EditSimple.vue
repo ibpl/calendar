@@ -203,9 +203,10 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import EditIcon from 'vue-material-design-icons/Pencil.vue'
-import { mapState } from 'pinia'
+import { mapState, mapStores } from 'pinia'
 import useSettingsStore from '../store/settings.js'
 import useWidgetStore from '../store/widget.js'
+import useCalendarObjectInstanceStore from '../store/calendarObjectInstance.js'
 
 export default {
 	name: 'EditSimple',
@@ -245,6 +246,7 @@ export default {
 		}
 	},
 	computed: {
+		...mapStores(useCalendarObjectInstanceStore),
 		...mapState(useSettingsStore, ['hideEventExport']),
 		...mapState(useWidgetStore, [
 			'hideEventExport',
@@ -309,7 +311,7 @@ export default {
 		if (this.isWidget) {
 			const objectId = this.widgetEventDetails.object
 			const recurrenceId = this.widgetEventDetails.recurrenceId
-			await this.$store.dispatch('getCalendarObjectInstanceByObjectIdAndRecurrenceId', { objectId, recurrenceId })
+			await this.calendarObjectInstanceStore.getCalendarObjectInstanceByObjectIdAndRecurrenceId({ objectId, recurrenceId })
 			this.calendarId = this.calendarObject.calendarId
 			this.isLoading = false
 		}

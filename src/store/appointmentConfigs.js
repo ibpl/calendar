@@ -25,7 +25,6 @@ import Vue from 'vue'
 import { defineStore } from 'pinia'
 import { createConfig, deleteConfig, updateConfig } from '../services/appointmentConfigService.js'
 import logger from '../utils/logger.js'
-import Vue from 'vue'
 
 export default defineStore('appointmentConfigs', {
 	state: () => {

@@ -68,6 +68,7 @@ import { getYYYYMMDDFromFirstdayParam } from '../utils/date.js'
 import useCalendarsStore from '../store/calendars.js'
 import useSettingsStore from '../store/settings.js'
 import useCalendarObjectsStore from '../store/calendarObjects.js'
+import useWidgetStore from '../store/widget.js'
 import { mapStores, mapState } from 'pinia'
 
 export default {
@@ -111,6 +112,10 @@ export default {
 			'slotDuration',
 		]),
 		...mapState(useCalendarObjectsStore, ['modificationCount']),
+		...mapState(useWidgetStore, [
+			'widgetView',
+			'widgetDate',
+		]),
 		options() {
 			return {
 				// Initialization:
@@ -167,12 +172,6 @@ export default {
 				return [calendar].map(eventSource())
 			}
 			return this.calendarsStore.enabledCalendars.map(eventSource())
-		},
-		widgetView() {
-			return this.$store.getters.widgetView
-		},
-		widgetDate() {
-			return this.$store.getters.widgetDate
 		},
 		/**
 		 * FullCalendar Plugins

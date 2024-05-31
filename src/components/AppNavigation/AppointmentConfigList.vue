@@ -131,7 +131,7 @@ export default {
 			logger.info('Deleting config', { config })
 
 			try {
-				await this.appointmentConfigStore.deleteConfig({ id: config.id })
+				await this.appointmentConfigsStore.deleteConfig({ id: config.id })
 
 				logger.info('Config deleted', { config })
 			} catch (error) {

@@ -216,7 +216,7 @@ export default {
 		}
 	},
 	computed: {
-		...mapStores(useSettingsStore, useCalendarsStore, useImportFilesStore),
+		...mapStores(useSettingsStore, useCalendarsStore, useImportFilesStore, usePrincipalsStore),
 		...mapState(useSettingsStore, [
 			'eventLimit',
 			'showTasks',
@@ -300,7 +300,7 @@ export default {
 			return parseInt(OC.config.version.split('.')[0])
 		},
 		defaultCalendarOptions() {
-			return this.$store.state.calendars.calendars
+			return this.calendarsStore.calendars
 				.filter(calendar => !calendar.readOnly && !calendar.isSharedWithMe)
 		},
 		/**
@@ -457,7 +457,7 @@ export default {
 			this.savingDefaultCalendar = true
 
 			try {
-				await this.$store.dispatch('changePrincipalScheduleDefaultCalendarUrl', {
+				await this.principalsStore.changePrincipalScheduleDefaultCalendarUrl({
 					principal: this.currentUserPrincipal,
 					scheduleDefaultCalendarUrl: selectedCalendar.url,
 				})
