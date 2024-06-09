@@ -2,6 +2,7 @@
  * @copyright Copyright (c) 2019 Georg Ehrke
  *
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author 2024 Richard Steinmetz <richard@steinmetz.cloud>
  *
  * @license AGPL-3.0-or-later
  *
@@ -20,6 +21,7 @@
  *
  */
 
+import { AttendeeProperty } from '@nextcloud/calendar-js'
 import {
 	PRINCIPAL_PREFIX_CALENDAR_RESOURCE,
 	PRINCIPAL_PREFIX_CALENDAR_ROOM,
@@ -67,6 +69,16 @@ const getDefaultPrincipalObject = (props) => Object.assign({}, {
 	principalId: null,
 	// The url of the default calendar for invitations
 	scheduleDefaultCalendarUrl: null,
+
+	/**
+	 * Convert the principal to an AttendeeProperty
+	 *
+	 * @param {boolean} isOrganizer Should it be an attendee or an organizer?
+	 * @return {import('@nextcloud/calendar-js').AttendeeProperty}
+	 */
+	toAttendeeProperty(isOrganizer = false) {
+		return AttendeeProperty.fromNameAndEMail(this.displayname, this.emailAddress, isOrganizer)
+	},
 }, props)
 
 /**

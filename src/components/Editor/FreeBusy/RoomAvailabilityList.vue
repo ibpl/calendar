@@ -8,24 +8,28 @@
 			<div>
 				<div v-for="room in rooms" :key="room.id" class="rooms">
 					<p>{{ room.displayname }}</p>
-					<NcButton @click="openRoomAvailability">
+					<NcButton @click="openRoomAvailability(room)">
 						{{ t('calendar', 'Check room availability') }}
 					</NcButton>
 				</div>
 			</div>
-			<RoomAvailabilityModal v-if="showRoomAvailabilityModel"
+			<RoomAvailabilityModal v-if="showRoomAvailabilityModal"
+				:show="showRoomAvailabilityModal"
 				:start-date="calendarObjectInstance.startDate"
 				:end-date="calendarObjectInstance.endDate"
-				:rooms="calendarObjectInstance.rooms"
+				:rooms="selectedRooms"
 				:calendar-object-instance="calendarObjectInstance"
-				:organizer="calendarObjectInstance.organizer"
+				:organizer="currentUserPrincipalAsAttendee"
 				@close="closeFreeBusy" />
 		</div>
 	</NcDialog>
 </template>
+
 <script>
 import { NcButton, NcDialog } from '@nextcloud/vue'
 import RoomAvailabilityModal from './RoomAvailabilityModal.vue'
+import { mapAttendeePropertyToAttendeeObject } from '../../../models/attendee.js'
+
 export default {
 	name: 'RoomAvailabilityList',
 	components: {
@@ -49,24 +53,35 @@ export default {
 	},
 	data() {
 		return {
-			showRoomAvailabilityModel: false,
+			showRoomAvailabilityModal: false,
 			showDialog: true,
+			selectedRooms: [],
 		}
 	},
 	computed: {
 		rooms() {
 			return this.$store.getters.getRoomPrincipals
 		},
+		/**
+		 * Return the current user principal as a ORGANIZER attendee object.
+		 *
+		 * @return {object}
+		 */
+		currentUserPrincipalAsAttendee() {
+			const attendee = this.$store.getters.getCurrentUserPrincipal.toAttendeeProperty(true)
+			return mapAttendeePropertyToAttendeeObject(attendee)
+		},
 	},
 	methods: {
-		openRoomAvailability() {
-			this.showRoomAvailabilityModel = true
+		openRoomAvailability(room) {
+			this.selectedRooms = [room]
+			this.showRoomAvailabilityModal = true
 		},
 		handleClose() {
 			this.showDialog = false
 		},
 		closeFreeBusy() {
-			this.showRoomAvailabilityModel = false
+			this.showRoomAvailabilityModal = false
 		},
 	},
 }

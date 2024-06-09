@@ -1,7 +1,8 @@
 <template>
 	<NcModal size="large"
+		:show="show"
 		:name="t('calendar', 'Check room availability')"
-		@closing="$emit('close')">
+		@close="$emit('close')">
 		<div class="modal__content modal--scheduler">
 			<div class="modal__content__header">
 				<h2>{{ $t('calendar', 'Find a time') }}</h2>
@@ -79,6 +80,12 @@ import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import ChevronLeftIcon from 'vue-material-design-icons/ChevronLeft.vue'
 import HelpCircleIcon from 'vue-material-design-icons/HelpCircle.vue'
 import { getCurrentUserPrincipal } from '../../../services/caldavService.js'
+import { AttendeeProperty } from '@nextcloud/calendar-js'
+import freeBusyBlockedForAllEventSource from '../../../fullcalendar/eventSources/freeBusyBlockedForAllEventSource.js'
+import freeBusyFakeBlockingEventSource from '../../../fullcalendar/eventSources/freeBusyFakeBlockingEventSource.js'
+import freeBusyResourceEventSource from '../../../fullcalendar/eventSources/freeBusyResourceEventSource.js'
+import { mapAttendeePropertyToAttendeeObject } from '../../../models/attendee.js'
+
 export default {
 	name: 'RoomAvailabilityModal',
 	components: {
@@ -93,6 +100,10 @@ export default {
 		NcButton,
 	},
 	props: {
+		show: {
+			type: Boolean,
+			required: true
+		},
 		startDate: {
 			type: Date,
 			required: true,
@@ -109,6 +120,10 @@ export default {
 			type: Object,
 			required: true,
 		},
+		rooms: {
+			type: Array,
+			required: true,
+		},
 	},
 	data() {
 		return {
@@ -121,7 +136,6 @@ export default {
 			formattingOptions: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
 			freeSlots: [],
 			selectedSlot: null,
-			rooms: [],
 			isSecondModalVisible: false,
 			selectedRoom: null,
 			showModal: false,
@@ -136,6 +150,50 @@ export default {
 			showWeekNumbers: state => state.settings.showWeekNumbers,
 			timezone: state => state.settings.timezone,
 		}),
+		/**
+		 * Map all given rooms to attendee properties.
+		 *
+		 * @return {import('@nextcloud/calendar-js').AttendeeProperty[]}
+		 */
+		attendees() {
+			return this.rooms.map((room) => mapAttendeePropertyToAttendeeObject(room.toAttendeeProperty()))
+		},
+		resources() {
+			const resources = []
+			for (const attendee of this.attendees) {
+				let title = attendee.commonName || attendee.uri.slice(7)
+				resources.push({
+					id: attendee.attendeeProperty.email,
+					title,
+				})
+			}
+			// Sort the resources by ID, just like fullcalendar does. This ensures that
+			// the fake blocking event can know the first and last resource reliably
+			// ref https://fullcalendar.io/docs/resourceOrder
+			resources.sort((a, b) => (a.id > b.id) - (a.id < b.id))
+
+			return resources
+		},
+		eventSources() {
+			return [
+				freeBusyResourceEventSource(
+					this._uid,
+					this.organizer.attendeeProperty,
+					this.attendees.map((a) => a.attendeeProperty),
+				),
+				freeBusyFakeBlockingEventSource(
+					this._uid,
+					this.resources,
+					this.currentStart,
+					this.currentEnd,
+				),
+				freeBusyBlockedForAllEventSource(
+					this.organizer.attendeeProperty,
+					this.attendees.map((a) => a.attendeeProperty),
+					this.resources,
+				),
+			]
+		},
 		/**
 		 * FullCalendar Plugins
 		 *
@@ -265,8 +323,8 @@ export default {
 				const endSearchDate = new Date(startSearch)
 				endSearchDate.setDate(startSearch.getDate() + 7)
 				const eventResults = await getBusySlots(
-					getCurrentUserPrincipal(),
-					this.rooms,
+					this.organizer,
+					this.attendees,
 					startSearch,
 					endSearchDate,
 					this.timeZoneId,
