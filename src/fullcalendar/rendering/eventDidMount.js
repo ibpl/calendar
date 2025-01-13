@@ -91,4 +91,67 @@ export default function({ event, el }) {
 			descriptionContainer.appendChild(description)
 		}
 	}
+
+	if (
+		el.classList.contains('fc-event-nc-all-declined') ||
+		el.classList.contains('fc-event-nc-needs-action') ||
+		el.classList.contains('fc-event-nc-declined')
+	) {
+		const titleElement = el.querySelector('.fc-event-title')
+		const dotElement = el.querySelector('.fc-daygrid-event-dot')
+
+		if (dotElement) {
+			dotElement.style.borderWidth = '0.1px'
+			dotElement.style.background = 'transparent'
+			dotElement.style.minWidth = '10px'
+			dotElement.style.minHeight = '10px'
+		}
+
+		titleElement.style.color = el.style.borderColor
+		el.style.background = 'transparent'
+		el.title = t('calendar', 'All participants declined')
+
+		if (el.classList.contains('fc-event-nc-needs-action')) {
+			el.title = t('calendar', 'Please confirm your participation')
+		}
+
+		if (el.classList.contains('fc-event-nc-declined')) {
+			el.title = t('calendar', 'You declined this event')
+			titleElement.style.textDecoration = 'line-through'
+		}
+	}
+
+	if (el.classList.contains('fc-event-nc-tentative')) {
+		const dotElement = el.querySelector('.fc-daygrid-event-dot')
+
+		const bgColor = el.style.backgroundColor ? el.style.backgroundColor : dotElement.style.borderColor
+		const bgStripeColor = darkenColor(bgColor)
+
+		let backgroundStyling = `repeating-linear-gradient(45deg, ${bgStripeColor}, ${bgStripeColor} 1px, ${bgColor} 1px, ${bgColor} 10px)`
+
+		if (dotElement) {
+			backgroundStyling = `repeating-linear-gradient(45deg, ${bgColor}, ${bgColor} 1px, transparent 1px, transparent 3.5px)`
+
+			dotElement.style.borderWidth = '0.1px'
+			dotElement.style.background = backgroundStyling
+			dotElement.style.minWidth = '10px'
+			dotElement.style.minHeight = '10px'
+		} else {
+			el.style.background = backgroundStyling
+		}
+
+		el.title = t('calendar', 'Your participation is tentative')
+	}
+}
+
+/**
+ * Create a slightly darker color for background stripes
+ *
+ * @param {string} color The color to darken
+ */
+function darkenColor(color) {
+	const rgb = color.match(/\d+/g)
+	if (!rgb) return color
+	const [r, g, b] = rgb.map(c => Math.max(0, Math.min(255, c - (c * 0.3))))
+	return `rgb(${r}, ${g}, ${b})`
 }
