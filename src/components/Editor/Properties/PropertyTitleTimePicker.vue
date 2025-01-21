@@ -335,13 +335,12 @@ export default {
 	overflow-y: clip !important;
 	flex-grow: 2;
 	flex-shrink: 1;
-	width: 170px;
+	width: 180px;
 	margin: 0;
 	min-width: unset;
 }
-
 :deep(.v-select.select) {
-	min-width: 170px !important;
+	min-width: 180px !important;
 }
 
 .property-title-time-picker__time-pickers {

@@ -446,7 +446,7 @@ export default {
 <style lang="scss" scoped>
 .event-popover__inner {
 	width: unset !important;
-	min-width: 400px !important;
+	min-width: 500px !important;
 }
 .modal-mask {
 	position: fixed;
