@@ -125,7 +125,7 @@ class CalendarWidget implements IAPIWidget, IAPIWidgetV2, IButtonWidget, IIconWi
 		];
 		$widgetItems = [];
 		foreach ($calendars as $calendar) {
-			if ($calendar instanceof ICalendarIsEnabled && $calendar->isEnabled() === false) {
+			if (interface_exists(ICalendarIsEnabled::class) && $calendar instanceof ICalendarIsEnabled && $calendar->isEnabled() === false) {
 				continue;
 			}
 			if ($calendar->isDeleted()) {
