@@ -45,9 +45,6 @@ export default function(uri, calendarData, success, start, end, timezone, attend
 
 	const events = []
 	for (const freeBusyProperty of freeBusyComponent.getPropertyIterator('FREEBUSY')) {
-		if (!isOrganizer && freeBusyProperty.type === 'BUSY-UNAVAILABLE') {
-			continue
-		}
 		/** @member {FreeBusyProperty} freeBusyProperty */
 		events.push({
 			id: Math.random().toString(36).substring(7),
@@ -59,6 +56,7 @@ export default function(uri, calendarData, success, start, end, timezone, attend
 			classNames: [
 				'free-busy-block',
 				'free-busy-' + freeBusyProperty.type.toLowerCase(),
+				isOrganizer && freeBusyProperty.type === 'BUSY-UNAVAILABLE' ? 'free-busy-busy-unavailable--organizer' : '',
 			],
 			title: attendeeName,
 			textColor: '#FFFFFF',

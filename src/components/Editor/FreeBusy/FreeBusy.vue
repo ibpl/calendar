@@ -50,7 +50,7 @@
 					</div>
 				</div>
 				<div class="modal__content__actions" :class="{'modal__content__actions--mobile': isMobile}">
-					<div v-if="isMobile" class="modal__content__actions__date">
+					<div v-if="isMobile" class="modal__content__actions__date date-navigation">
 						<NcButton type="secondary"
 							:aria-label="t('calendar', 'Today')"
 							@click="handleActions('today')">
@@ -89,8 +89,7 @@
 									<div class="freebusy-caption__calendar-user-types" />
 									<div class="freebusy-caption__colors">
 										<div class="freebusy-caption-item">
-											<div class="freebusy-caption-item__color"
-												:style=" { 'background': 'repeating-linear-gradient(45deg, #dbdbdb, #dbdbdb 1px, transparent 1px, transparent 3.5px)'}" />
+											<div class="freebusy-caption-item__color" />
 											<div class="
 											freebusy-caption-item__label">
 												{{ $t('calendar', 'Out of office') }}
@@ -103,7 +102,7 @@
 					</div>
 				</div>
 				<div class="modal__content__title" :class="{'modal__content__title--mobile': isMobile}">
-					<div v-if="!isMobile" class="modal__content__actions__title__date">
+					<div v-if="!isMobile" class="modal__content__actions__title__date date-navigation">
 						<NcButton type="secondary"
 							:aria-label="t('calendar', 'Today')"
 							@click="handleActions('today')">
@@ -141,8 +140,7 @@
 									<div class="freebusy-caption__calendar-user-types" />
 									<div class="freebusy-caption__colors">
 										<div class="freebusy-caption-item">
-											<div class="freebusy-caption-item__color"
-												:style=" { 'background': 'repeating-linear-gradient(45deg, #dbdbdb, #dbdbdb 1px, transparent 1px, transparent 3.5px)'}" />
+											<div class="freebusy-caption-item__color" />
 											<div class="
 											freebusy-caption-item__label">
 												{{ $t('calendar', 'Out of office') }}
@@ -201,7 +199,7 @@
 										<template #icon>
 											<Close :size="20" />
 										</template>
-										Delete
+										{{ t('calendar','Delete') }}
 									</NcActionButton>
 								</NcActions>
 							</NcListItemIcon>
@@ -558,8 +556,7 @@ export default {
 				eventElement.style.setProperty('border', `2px solid ${this.personalCalendarColor}`, 'important')
 				return
 			}
-			if (e.event.title === this.organizer.attendeeProperty.commonName && e.el.classList.contains('free-busy-busy-unavailable')) {
-				eventElement.style.background = 'repeating-linear-gradient(45deg, #dbdbdb, #dbdbdb 1px, transparent 1px, transparent 3.5px)'
+			if (e.el.classList.contains('free-busy-busy-unavailable--organizer')) {
 				return
 			}
 			const color = uidToHexColor(e.event.title)
@@ -678,11 +675,30 @@ export default {
 	display: block;
 	height: 100%;
 }
+
+.freebusy-caption-item{
+	&__color{
+		background: repeating-linear-gradient(45deg, #dbdbdb, #dbdbdb 1px, transparent 1px, transparent 3.5px) !important;
+	}
+}
 .modal{
 	display: flex !important;
 	justify-content: center;
 	height: 100%;
 	overflow: hidden;
+
+	:deep(.free-busy-busy-unavailable--organizer){
+		background: repeating-linear-gradient(45deg, #dbdbdb, #dbdbdb 1px, transparent 1px, transparent 3.5px) !important;
+	}
+
+	.date-navigation{
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		& > *{
+			margin-inline-start: var(--default-grid-baseline);
+		}
+	}
 
 	&__content {
 		max-width: 1200px;
@@ -703,24 +719,6 @@ export default {
 			;
 			&__select{
 				width: 260px;
-			}
-			&__date{
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				& > *{
-					margin-inline-start: var(--default-grid-baseline);
-				}
-			}
-			&__title{
-				&__date{
-					display: flex;
-					justify-content: space-between;
-					align-items: center;
-					& > *{
-						margin-inline-start: var(--default-grid-baseline);
-					}
-				}
 			}
 		}
 		&__title{
