@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 import { detectColor, uidToHexColor } from '../utils/color.js'
+import { isAfterVersion } from '../utils/nextcloudVersion.ts'
 import { mapDavShareeToCalendarShareObject } from './calendarShare.js'
 
 /**
@@ -44,6 +45,11 @@ function getDefaultCalendarObject(props = {}) {
 		order: 0,
 		// Whether or not the calendar is shared with me
 		isSharedWithMe: false,
+		// Whether or not the calendar belongs to a user who delegated to me
+		isDelegated: false,
+		// Principal URL of the delegator whose home this calendar was fetched from
+		// (may differ from `owner` when the delegator only has access via a share)
+		delegatorUrl: '',
 		// Whether or not the calendar can be shared by me
 		canBeShared: false,
 		// Whether or not the calendar can be published by me
@@ -62,6 +68,10 @@ function getDefaultCalendarObject(props = {}) {
 		fetchedTimeRanges: [],
 		// Scheduling transparency
 		transparency: 'opaque',
+		// Default alarm/reminder for part-day events in seconds (null if disabled)
+		defaultAlarmPartDay: null,
+		// Default alarm/reminder for full-day events in seconds (null if disabled)
+		defaultAlarmFullDay: null,
 		...props,
 	}
 }
@@ -103,6 +113,10 @@ function mapDavCollectionToCalendar(calendar, currentUserPrincipal) {
 	// then the default value CALDAV:opaque MUST be assumed.
 	// https://datatracker.ietf.org/doc/html/rfc6638#section-9.1
 	const transparency = calendar.transparency || 'opaque'
+	// Default alarm for part-day events in this calendar (in seconds)
+	const defaultAlarmPartDay = isAfterVersion(34) && calendar.defaultAlarmPartDay !== undefined ? calendar.defaultAlarmPartDay : null
+	// Default alarm for full-day events in this calendar (in seconds)
+	const defaultAlarmFullDay = isAfterVersion(34) && calendar.defaultAlarmFullDay !== undefined ? calendar.defaultAlarmFullDay : null
 
 	let isSharedWithMe = false
 	if (!currentUserPrincipal) {
@@ -161,6 +175,8 @@ function mapDavCollectionToCalendar(calendar, currentUserPrincipal) {
 		shares,
 		timezone,
 		transparency,
+		defaultAlarmPartDay,
+		defaultAlarmFullDay,
 		dav: calendar,
 	})
 }

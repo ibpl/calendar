@@ -3,16 +3,19 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-import { showError } from '@nextcloud/dialogs'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { mapState, mapStores } from 'pinia'
 import { getRFCProperties } from '../models/rfcProps.js'
+import { containsRoomUrl } from '../services/talkService.ts'
 import useCalendarObjectInstanceStore from '../store/calendarObjectInstance.js'
 import useCalendarObjectsStore from '../store/calendarObjects.js'
 import useCalendarsStore from '../store/calendars.js'
 import usePrincipalsStore from '../store/principals.js'
 import useSettingsStore from '../store/settings.js'
 import useWidgetStore from '../store/widget.js'
+import { updateDefaultAlarm } from '../utils/alarms.js'
 import { removeMailtoPrefix } from '../utils/attendee.js'
 import { uidToHexColor } from '../utils/color.js'
 import { dateFactory } from '../utils/date.js'
@@ -54,12 +57,15 @@ export default {
 			isEditingMasterItem: false,
 			// Whether or not it is a recurrence-exception
 			isRecurrenceException: false,
+			// Whether or not the Talk modal is open
+			isTalkModalOpen: false,
 		}
 	},
 	computed: {
 		...mapState(useSettingsStore, {
 			currentUserTimezone: 'getResolvedTimezone',
 		}),
+		...mapState(useSettingsStore, ['talkEnabled']),
 		...mapState(useCalendarsStore, ['initialCalendarsLoaded']),
 		...mapState(useCalendarObjectInstanceStore, ['calendarObject', 'calendarObjectInstance']),
 		...mapStores(useCalendarsStore, usePrincipalsStore, useCalendarObjectsStore, useCalendarObjectInstanceStore, useSettingsStore, useWidgetStore),
@@ -363,6 +369,28 @@ export default {
 			return this.calendarObject.dav.url + '?export'
 		},
 		/**
+		 * Returns the permanent deep link URL for this event, or null if the event is new
+		 *
+		 * @return {string|null}
+		 */
+		eventLink() {
+			if (!this.calendarObject) {
+				return null
+			}
+
+			const uid = this.calendarObject.uid
+			if (!uid) {
+				return null
+			}
+
+			const recurrenceId = this.$route?.params?.recurrenceId
+			if (recurrenceId && recurrenceId !== 'next') {
+				return window.location.origin + generateUrl('/apps/calendar/object/{uid}/{recurrenceId}', { uid, recurrenceId })
+			}
+
+			return window.location.origin + generateUrl('/apps/calendar/object/{uid}', { uid })
+		},
+		/**
 		 * Returns whether or not this is a new event
 		 *
 		 * @return {boolean}
@@ -377,6 +405,25 @@ export default {
 			}
 
 			return false
+		},
+
+		/**
+		 * Returns whether the Talk room button should be disabled
+		 * (i.e. location or description already contains a Talk room URL)
+		 *
+		 * @return {boolean}
+		 */
+		isCreateTalkRoomButtonDisabled() {
+			return containsRoomUrl(this.calendarObjectInstance?.location) || containsRoomUrl(this.calendarObjectInstance?.description)
+		},
+
+		/**
+		 * Returns whether the Talk room button should be visible
+		 *
+		 * @return {boolean}
+		 */
+		isCreateTalkRoomButtonVisible() {
+			return this.talkEnabled && this.isViewedByOrganizer !== false && this.isReadOnly !== true
 		},
 	},
 
@@ -411,6 +458,7 @@ export default {
 				// Set the calendarId from the created calendar object
 				if (this.calendarObject) {
 					this.calendarId = this.calendarObject.calendarId
+					this.addDelegatorAsAttendeeIfNeeded(this.selectedCalendar)
 				}
 
 				console.debug('[Editor] New event created successfully')
@@ -446,6 +494,13 @@ export default {
 
 	methods: {
 		/**
+		 * Opens the Talk modal for selecting or creating a Talk room
+		 */
+		openTalkModal() {
+			this.isTalkModalOpen = true
+		},
+
+		/**
 		 * Changes the selected calendar
 		 * Does not move the calendar-object yet, that's done in save
 		 *
@@ -460,6 +515,48 @@ export default {
 			// to the desired calendar as a second step.
 			if (this.calendarObject && !this.calendarObject.existsOnServer) {
 				this.calendarObject.calendarId = selectedCalendar.id
+				this.addDelegatorAsAttendeeIfNeeded(selectedCalendar)
+			}
+
+			updateDefaultAlarm(this.calendarObject.calendarId, this.calendarObjectInstance)
+		},
+
+		/**
+		 * When creating an event on a delegated calendar, automatically adds the
+		 * delegator as an attendee so they are aware of and invited to the event.
+		 *
+		 * @param {object|null} calendar The calendar object to check
+		 */
+		addDelegatorAsAttendeeIfNeeded(calendar) {
+			if (!calendar?.isDelegated || !calendar.delegatorUrl) {
+				return
+			}
+
+			if (!this.calendarObjectInstance) {
+				return
+			}
+
+			const delegatorPrincipal = this.principalsStore.getPrincipalByUrl(calendar.delegatorUrl)
+			if (!delegatorPrincipal?.emailAddress) {
+				return
+			}
+
+			const alreadyAttendee = this.calendarObjectInstance.attendees.some((attendee) => removeMailtoPrefix(attendee.uri) === delegatorPrincipal.emailAddress)
+
+			if (!alreadyAttendee) {
+				this.calendarObjectInstanceStore.addAttendee({
+					calendarObjectInstance: this.calendarObjectInstance,
+					commonName: delegatorPrincipal.displayname,
+					uri: delegatorPrincipal.emailAddress,
+					calendarUserType: 'INDIVIDUAL',
+					participationStatus: 'NEEDS-ACTION',
+					role: 'REQ-PARTICIPANT',
+					rsvp: true,
+					language: null,
+					timezoneId: null,
+					organizer: this.principalsStore.getCurrentUserPrincipal,
+					member: null,
+				})
 			}
 		},
 		/**
@@ -610,6 +707,25 @@ export default {
 		 */
 		async duplicateEvent() {
 			await this.calendarObjectInstanceStore.duplicateCalendarObjectInstance()
+		},
+
+		/**
+		 * Copies the permanent event deep link to the clipboard
+		 *
+		 * @return {Promise<void>}
+		 */
+		async copyEventLink() {
+			if (!this.eventLink) {
+				return
+			}
+
+			try {
+				await navigator.clipboard.writeText(this.eventLink)
+				showSuccess(t('calendar', 'Event link copied to clipboard'))
+			} catch (error) {
+				logger.error('Failed to copy event link to clipboard', { error })
+				showError(t('calendar', 'Failed to copy event link'))
+			}
 		},
 
 		/**
@@ -781,6 +897,8 @@ export default {
 			this.calendarObjectInstanceStore.toggleAllDay({
 				calendarObjectInstance: this.calendarObjectInstance,
 			})
+
+			updateDefaultAlarm(this.calendarObject.calendarId, this.calendarObjectInstance)
 		},
 		/**
 		 * Resets the internal state after changing the viewed calendar-object

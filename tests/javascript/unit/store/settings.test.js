@@ -49,6 +49,8 @@ describe('store/settings test suite', () => {
 			skipPopover: null,
 			slotDuration: null,
 			defaultReminder: null,
+			defaultReminderPartDay: null,
+			defaultReminderFullDay: null,
 			tasksEnabled: false,
 			tasksSidebar: true,
 			timezone: 'automatic',
@@ -59,6 +61,7 @@ describe('store/settings test suite', () => {
 			attachmentsFolderCreated: false,
 			showResources: true,
 			publicCalendars: null,
+			searchQuery: '',
 		})
 	})
 
@@ -76,6 +79,8 @@ describe('store/settings test suite', () => {
 			skipPopover: null,
 			slotDuration: null,
 			defaultReminder: null,
+			defaultReminderPartDay: null,
+			defaultReminderFullDay: null,
 			tasksEnabled: false,
 			tasksSidebar: true,
 			timezone: 'automatic',
@@ -102,6 +107,8 @@ describe('store/settings test suite', () => {
 			skipPopover: true,
 			slotDuration: '00:30:00',
 			defaultReminder: '-600',
+			defaultReminderPartDay: undefined,
+			defaultReminderFullDay: undefined,
 			talkEnabled: false,
 			tasksEnabled: true,
 			tasksSidebar: false,
@@ -130,6 +137,8 @@ Initial settings:
 	- SkipPopover: true
 	- SlotDuration: 00:30:00
 	- DefaultReminder: -600
+	- DefaultReminderPartDay: undefined
+	- DefaultReminderFullDay: undefined
 	- TalkEnabled: false
 	- TasksEnabled: true
 	- TasksSidebar: false
@@ -152,6 +161,8 @@ Initial settings:
 			skipPopover: true,
 			slotDuration: '00:30:00',
 			defaultReminder: '-600',
+			defaultReminderPartDay: '-600',
+			defaultReminderFullDay: '-600',
 			talkEnabled: false,
 			tasksEnabled: true,
 			tasksSidebar: false,
@@ -166,6 +177,7 @@ Initial settings:
 			attachmentsFolderCreated: false,
 			showResources: true,
 			publicCalendars: null,
+			searchQuery: '',
 		})
 	})
 
@@ -596,6 +608,16 @@ Initial settings:
 		expect(setConfig).toHaveBeenNthCalledWith(1, 'timezone', 'Europe/Berlin')
 
 		expect(settingsStore.timezone).toEqual('Europe/Berlin')
+	})
+
+	it('should provide an action to set the search query', () => {
+		const settingsStore = useSettingsStore()
+
+		settingsStore.setSearchQuery('meeting')
+		expect(settingsStore.searchQuery).toEqual('meeting')
+
+		settingsStore.setSearchQuery('')
+		expect(settingsStore.searchQuery).toEqual('')
 	})
 
 	it('should provide an action to initialize the calendar-js config', () => {

@@ -79,6 +79,10 @@
 	}
 }
 
+.vs__selected-options {
+	max-width: calc(100% - var(--default-clickable-area) - var(--default-grid-baseline));
+}
+
 .property-repeat__summary__content {
 	max-width: 300px;
 }
@@ -114,6 +118,10 @@
 
 	.app-full &__front, &__edit {
 		margin-inline-start: calc(var(--default-grid-baseline) * 9);
+	}
+
+	&__label--default {
+		color: var(--color-text-maxcontrast);
 	}
 }
 
@@ -216,7 +224,6 @@
 				border: var(--border-width-input) solid var(--color-border-dark);
 				text-align: center;
 				margin: 0;
-				border-radius: 0;
 			}
 		}
 	}
@@ -363,23 +370,6 @@
 	}
 }
 
-// Override outdated server styling
-input:not(
-	[type='range'],
-	.input-field__input,
-	[type='submit'],
-	[type='button'],
-	[type='reset'],
-	.multiselect__input,
-	.select2-input,
-	.action-input__input,
-	[class^="vs__"]
-),
-select,
-div[contenteditable=true],
-textarea {
-	border: var(--border-width-input) solid var(--color-border-maxcontrast);
-}
 
 textarea {
 	padding: 5px 12px !important;

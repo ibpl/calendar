@@ -4,6 +4,7 @@
  */
 
 import { DateTimeValue, DurationValue } from '@nextcloud/calendar-js'
+import { markRaw } from 'vue'
 import { getClosestCSS3ColorNameForHex, getHexForColorName } from '../utils/color.js'
 import { getDateFromDateTimeValue } from '../utils/date.js'
 import { mapAlarmComponentToAlarmObject } from './alarm.js'
@@ -71,6 +72,8 @@ function getDefaultEventObject(props = {}) {
 		categories: [],
 		// Attachments of this event
 		attachments: [],
+		// Invitation forwarding
+		invitationForwarding: 'TRUE',
 		...props,
 	}
 }
@@ -82,7 +85,7 @@ function getDefaultEventObject(props = {}) {
  */
 function mapEventComponentToEventObject(eventComponent) {
 	const eventObject = getDefaultEventObject({
-		eventComponent,
+		eventComponent: markRaw(eventComponent),
 		title: eventComponent.title,
 		isAllDay: eventComponent.isAllDay(),
 		canModifyAllDay: eventComponent.canModifyAllDay(),
@@ -172,6 +175,10 @@ function mapEventComponentToEventObject(eventComponent) {
 		}
 	}
 
+	if (eventComponent.hasProperty('X-NC-INVITATION-FORWARDING')) {
+		eventObject.invitationForwarding = eventComponent.getFirstPropertyFirstValue('X-NC-INVITATION-FORWARDING')
+	}
+
 	return eventObject
 }
 
@@ -219,6 +226,10 @@ function copyCalendarObjectInstanceIntoEventComponent(eventObject, eventComponen
 
 	for (const rule of eventObject.eventComponent.getPropertyIterator('RRULE')) {
 		eventComponent.addProperty(rule)
+	}
+
+	if (eventObject.eventComponent.hasProperty('X-NC-INVITATION-FORWARDING')) {
+		eventComponent.updatePropertyWithValue('X-NC-INVITATION-FORWARDING', eventObject.invitationForwarding)
 	}
 
 	if (eventObject.customColor) {

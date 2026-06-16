@@ -43,6 +43,37 @@
 					{{ $t('calendar', 'Never show me as busy (set this calendar to transparent)') }}
 				</NcCheckboxRadioSwitch>
 			</template>
+			<template v-if="!calendar.isSharedWithMe && isAfterVersion">
+				<div class="edit-calendar-modal__default-alarm">
+					<label for="default-alarm-partday-select" class="edit-calendar-modal__default-alarm__label">
+						{{ $t('calendar', 'Default reminder for part-day events') }}
+					</label>
+					<NcSelect
+						id="default-alarm-partday-select"
+						v-model="selectedDefaultAlarmPartDay"
+						:options="defaultAlarmPartDayOptions"
+						:clearable="false"
+						:placeholder="$t('calendar', 'Select default reminder')"
+						class="edit-calendar-modal__default-alarm__select"
+						@update:modelValue="defaultAlarmChanged = true" />
+				</div>
+				<div class="edit-calendar-modal__default-alarm">
+					<label for="default-alarm-fullday-select" class="edit-calendar-modal__default-alarm__label">
+						{{ $t('calendar', 'Default reminder for full-day events') }}
+					</label>
+					<NcSelect
+						id="default-alarm-fullday-select"
+						v-model="selectedDefaultAlarmFullDay"
+						:options="defaultAlarmFullDayOptions"
+						:clearable="false"
+						:placeholder="$t('calendar', 'Select default reminder')"
+						class="edit-calendar-modal__default-alarm__select"
+						@update:modelValue="defaultAlarmChanged = true" />
+					<p class="edit-calendar-modal__default-alarm__hint">
+						{{ $t('calendar', 'These reminders will be automatically added to new events created in this calendar') }}
+					</p>
+				</div>
+			</template>
 			<template v-if="canBeShared">
 				<h3 class="edit-calendar-modal__sharing-header">
 					{{ $t('calendar', 'Share calendar') }}
@@ -93,7 +124,7 @@
 <script>
 import { showError } from '@nextcloud/dialogs'
 import { getLanguage } from '@nextcloud/l10n'
-import { NcAppNavigationSpacer, NcButton, NcCheckboxRadioSwitch, NcColorPicker, NcModal, NcTextField } from '@nextcloud/vue'
+import { NcAppNavigationSpacer, NcButton, NcCheckboxRadioSwitch, NcColorPicker, NcModal, NcSelect, NcTextField } from '@nextcloud/vue'
 import { mapStores } from 'pinia'
 import CheckIcon from 'vue-material-design-icons/Check.vue'
 import CloseIcon from 'vue-material-design-icons/Close.vue'
@@ -103,8 +134,16 @@ import InternalLink from './EditCalendarModal/InternalLink.vue'
 import PublishCalendar from './EditCalendarModal/PublishCalendar.vue'
 import ShareItem from './EditCalendarModal/ShareItem.vue'
 import SharingSearch from './EditCalendarModal/SharingSearch.vue'
+import { getDefaultAlarms } from '../../defaults/defaultAlarmProvider.js'
+import alarmFormat from '../../filters/alarmFormat.js'
 import useCalendarsStore from '../../store/calendars.js'
+import useSettingsStore from '../../store/settings.js'
+import {
+	getAmountAndUnitForTimedEvents,
+	getAmountHoursMinutesAndUnitForAllDayEvents,
+} from '../../utils/alarms.js'
 import logger from '../../utils/logger.js'
+import { isAfterVersion } from '../../utils/nextcloudVersion.ts'
 
 export default {
 	name: 'EditCalendarModal',
@@ -113,6 +152,7 @@ export default {
 		NcColorPicker,
 		NcButton,
 		NcTextField,
+		NcSelect,
 		PublishCalendar,
 		SharingSearch,
 		ShareItem,
@@ -132,6 +172,9 @@ export default {
 			isTransparent: false,
 			calendarName: undefined,
 			calendarNameChanged: false,
+			selectedDefaultAlarmPartDay: null,
+			selectedDefaultAlarmFullDay: null,
+			defaultAlarmChanged: false,
 		}
 	},
 
@@ -220,6 +263,73 @@ export default {
 				{ types: localizedTypes },
 			)
 		},
+
+		/**
+		 * Get the default alarm options for part-day (timed) events
+		 *
+		 * @return {Array}
+		 */
+		defaultAlarmPartDayOptions() {
+			const settingsStore = useSettingsStore()
+			const currentUserTimezone = settingsStore.getResolvedTimezone
+			const locale = settingsStore.momentLocale
+
+			const options = [
+				{
+					label: this.$t('calendar', 'None'),
+					value: null,
+				},
+			]
+
+			const alarms = getDefaultAlarms(false)
+			for (const alarm of alarms) {
+				const alarmObject = this.getAlarmObjectFromTriggerTime(alarm)
+				options.push({
+					label: alarmFormat(alarmObject, false, currentUserTimezone, locale),
+					value: alarm,
+				})
+			}
+
+			return options
+		},
+
+		/**
+		 * Get the default alarm options for full-day (all-day) events
+		 *
+		 * @return {Array}
+		 */
+		defaultAlarmFullDayOptions() {
+			const settingsStore = useSettingsStore()
+			const currentUserTimezone = settingsStore.getResolvedTimezone
+			const locale = settingsStore.momentLocale
+
+			const options = [
+				{
+					label: this.$t('calendar', 'None'),
+					value: null,
+				},
+			]
+
+			const alarms = getDefaultAlarms(true)
+			for (const alarm of alarms) {
+				const alarmObject = this.getAlarmObjectFromTriggerTime(alarm)
+				options.push({
+					label: alarmFormat(alarmObject, true, currentUserTimezone, locale),
+					value: alarm,
+				})
+			}
+
+			return options
+		},
+
+		/**
+		 * Whether the default alarm feature is supported (Nextcloud 34+)
+		 *
+		 * @return {boolean}
+		 */
+		isAfterVersion() {
+			return isAfterVersion(34)
+		},
 	},
 
 	watch: {
@@ -233,6 +343,25 @@ export default {
 			this.calendarNameChanged = false
 			this.calendarColorChanged = false
 			this.isTransparent = calendar.transparency === 'transparent'
+
+			// Initialize default alarm for part-day events
+			if (calendar.defaultAlarmPartDay === null) {
+				this.selectedDefaultAlarmPartDay = this.defaultAlarmPartDayOptions[0]
+			} else {
+				const value = parseInt(calendar.defaultAlarmPartDay)
+				const option = this.defaultAlarmPartDayOptions.find((opt) => opt.value === value)
+				this.selectedDefaultAlarmPartDay = option || this.defaultAlarmPartDayOptions[0]
+			}
+
+			// Initialize default alarm for full-day events
+			if (calendar.defaultAlarmFullDay === null) {
+				this.selectedDefaultAlarmFullDay = this.defaultAlarmFullDayOptions[0]
+			} else {
+				const value = parseInt(calendar.defaultAlarmFullDay)
+				const option = this.defaultAlarmFullDayOptions.find((opt) => opt.value === value)
+				this.selectedDefaultAlarmFullDay = option || this.defaultAlarmFullDayOptions[0]
+			}
+			this.defaultAlarmChanged = false
 		},
 	},
 
@@ -299,6 +428,26 @@ export default {
 		},
 
 		/**
+		 * Save the calendar default alarms.
+		 */
+		async saveDefaultAlarm() {
+			try {
+				const pdayValue = this.selectedDefaultAlarmPartDay ? this.selectedDefaultAlarmPartDay.value : null
+				const fdayValue = this.selectedDefaultAlarmFullDay ? this.selectedDefaultAlarmFullDay.value : null
+				await this.calendarsStore.changeCalendarDefaultAlarms({
+					calendar: this.calendar,
+					defaultAlarmPartDay: pdayValue,
+					defaultAlarmFullDay: fdayValue,
+				})
+			} catch (error) {
+				logger.error('Failed to save calendar default alarms', {
+					calendar: this.calendar,
+				})
+				throw error
+			}
+		},
+
+		/**
 		 * Save unsaved changes and close the modal.
 		 *
 		 * @return {Promise<void>}
@@ -315,6 +464,9 @@ export default {
 				if (this.calendarNameChanged) {
 					await this.saveName()
 				}
+				if (this.isAfterVersion && this.defaultAlarmChanged) {
+					await this.saveDefaultAlarm()
+				}
 			} catch (error) {
 				showError(this.$t('calendar', 'Failed to save calendar name and color'))
 			}
@@ -330,6 +482,32 @@ export default {
 				calendar: this.calendar,
 			})
 			this.closeModal()
+		},
+
+		/**
+		 * Create alarm object from trigger time for formatting
+		 *
+		 * @param {number} time Total amount of seconds for the trigger
+		 * @return {object} The alarm object
+		 */
+		getAlarmObjectFromTriggerTime(time) {
+			const timedData = getAmountAndUnitForTimedEvents(time)
+			const allDayData = getAmountHoursMinutesAndUnitForAllDayEvents(time)
+
+			return {
+				isRelative: true,
+				absoluteDate: null,
+				absoluteTimezoneId: null,
+				relativeIsBefore: time < 0,
+				relativeIsRelatedToStart: true,
+				relativeUnitTimed: timedData.unit,
+				relativeAmountTimed: timedData.amount,
+				relativeUnitAllDay: allDayData.unit,
+				relativeAmountAllDay: allDayData.amount,
+				relativeHoursAllDay: allDayData.hours,
+				relativeMinutesAllDay: allDayData.minutes,
+				relativeTrigger: time,
+			}
 		},
 	},
 }
@@ -395,6 +573,25 @@ export default {
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
+	}
+
+	&__default-alarm {
+		margin-bottom: calc(var(--default-grid-baseline) * 2);
+
+		&__label {
+			display: block;
+			margin-bottom: var(--default-grid-baseline);
+			font-weight: bold;
+		}
+
+		&__select {
+			width: 100%;
+		}
+
+		&__hint {
+			margin-top: var(--default-grid-baseline);
+			color: var(--color-text-maxcontrast);
+		}
 	}
 
 	.checkbox-content {

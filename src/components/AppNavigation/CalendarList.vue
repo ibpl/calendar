@@ -77,6 +77,43 @@
 				:calendar="calendar" />
 		</template>
 
+		<NcAppNavigationCaption v-if="sortedCalendars.tasks.length" :name="$t('calendar', 'Tasks')" />
+		<template v-if="!isPublic">
+			<Draggable
+				v-model="sortedCalendars.tasks"
+				itemKey="id"
+				:disabled="disableDragging"
+				v-bind="{ swapThreshold: 0.30, delay: 500, delayOnTouchOnly: true, touchStartThreshold: 3 }"
+				draggable=".draggable-calendar-list-item"
+				@update="updateInput">
+				<template #item="{ element: calendar }">
+					<CalendarListItem
+						:key="calendar.id"
+						class="draggable-calendar-list-item"
+						:calendar="calendar" />
+				</template>
+			</Draggable>
+		</template>
+		<template v-else>
+			<PublicCalendarListItem
+				v-for="calendar in sortedCalendars.tasks"
+				:key="calendar.id"
+				:calendar="calendar" />
+		</template>
+
+		<template v-if="!isPublic && isDelegationSupported && sortedCalendars.delegated.length">
+			<template v-for="group in delegatedGroups" :key="group.delegatorUrl">
+				<NcAppNavigationCaption
+					:name="group.readOnly
+						? $t('calendar', 'Delegated by {name} (read-only)', { name: group.displayname })
+						: $t('calendar', 'Delegated by {name}', { name: group.displayname })" />
+				<CalendarListItem
+					v-for="calendar in group.calendars"
+					:key="calendar.id"
+					:calendar="calendar" />
+			</template>
+		</template>
+
 		<NcAppNavigationSpacer />
 
 		<!-- The header slot must be placed here, otherwise vuedraggable adds undefined as item to the array -->
@@ -98,6 +135,9 @@ import CalendarListItemLoadingPlaceholder from './CalendarList/CalendarListItemL
 import CalendarListNew from './CalendarList/CalendarListNew.vue'
 import PublicCalendarListItem from './CalendarList/PublicCalendarListItem.vue'
 import useCalendarsStore from '../../store/calendars.js'
+import useDelegationStore from '../../store/delegation.ts'
+import usePrincipalsStore from '../../store/principals.js'
+import { isAfterVersion } from '../../utils/nextcloudVersion.ts'
 
 const limit = pLimit(1)
 
@@ -129,12 +169,14 @@ export default {
 		return {
 			calendars: [],
 			/**
-			 * Calendars sorted by personal, shared, and deck
+			 * Calendars sorted by personal, shared, deck, and delegated
 			 */
 			sortedCalendars: {
 				personal: [],
 				shared: [],
 				deck: [],
+				tasks: [],
+				delegated: [],
 			},
 
 			disableDragging: false,
@@ -143,13 +185,42 @@ export default {
 	},
 
 	computed: {
-		...mapStores(useCalendarsStore),
+		...mapStores(useCalendarsStore, useDelegationStore, usePrincipalsStore),
 		...mapState(useCalendarsStore, {
 			serverCalendars: 'sortedCalendarsSubscriptions',
 		}),
 
 		loadingKeyCalendars() {
 			return this._uid + '-loading-placeholder-calendars'
+		},
+
+		isDelegationSupported() {
+			return isAfterVersion(34)
+		},
+
+		/**
+		 * Delegated calendars grouped by the delegator (the user who granted
+		 * proxy access), which may differ from each calendar's owner when the
+		 * delegator only has access via a regular share.
+		 *
+		 * @return {Array<{delegatorUrl: string, displayname: string, calendars: object[]}>}
+		 */
+		delegatedGroups() {
+			const groups = new Map()
+			for (const calendar of this.sortedCalendars.delegated) {
+				const delegatorUrl = calendar.delegatorUrl || calendar.owner || ''
+				if (!groups.has(delegatorUrl)) {
+					const principal = this.principalsStore.getPrincipalByUrl(delegatorUrl)
+					groups.set(delegatorUrl, {
+						delegatorUrl,
+						displayname: principal?.displayname || principal?.userId || '',
+						readOnly: !!calendar.readOnly,
+						calendars: [],
+					})
+				}
+				groups.get(delegatorUrl).calendars.push(calendar)
+			}
+			return Array.from(groups.values())
 		},
 	},
 
@@ -182,9 +253,16 @@ export default {
 				personal: [],
 				shared: [],
 				deck: [],
+				tasks: [],
+				delegated: [],
 			}
 
 			this.calendars.forEach((calendar) => {
+				if (calendar.isDelegated) {
+					this.sortedCalendars.delegated.push(calendar)
+					return
+				}
+
 				if (calendar.isSharedWithMe) {
 					this.sortedCalendars.shared.push(calendar)
 					return
@@ -192,6 +270,11 @@ export default {
 
 				if (calendar.url.includes('app-generated--deck--board')) {
 					this.sortedCalendars.deck.push(calendar)
+					return
+				}
+
+				if (calendar.supportsTasks && !calendar.supportsEvents && !calendar.supportsJournals) {
+					this.sortedCalendars.tasks.push(calendar)
 					return
 				}
 
@@ -209,6 +292,7 @@ export default {
 				...this.sortedCalendars.personal,
 				...this.sortedCalendars.shared,
 				...this.sortedCalendars.deck,
+				...this.sortedCalendars.tasks,
 			]
 			const newOrder = currentCalendars.reduce((newOrderObj, currentItem, currentIndex) => {
 				newOrderObj[currentItem.id] = currentIndex

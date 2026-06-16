@@ -58,6 +58,12 @@
 							@saveThisAndAllFuture="prepareAccessForAttachments(true)" />
 						<div class="app-full__actions__inner" :class="[{ 'app-full__actions__inner__readonly': isReadOnly }]">
 							<NcActions>
+								<NcActionButton v-if="eventLink && !isNew" @click="copyEventLink()">
+									<template #icon>
+										<ContentCopy :size="20" decorative />
+									</template>
+									{{ $t('calendar', 'Copy link') }}
+								</NcActionButton>
 								<NcActionLink v-if="!hideEventExport && hasDownloadURL && !isNew" :href="downloadURL">
 									<template #icon>
 										<Download :size="20" decorative />
@@ -82,6 +88,7 @@
 									</template>
 									{{ $t('calendar', 'Delete this occurrence') }}
 								</NcActionButton>
+								<NcActionSeparator v-if="canDelete && canCreateRecurrenceException && !isNew" />
 								<NcActionButton v-if="canDelete && canCreateRecurrenceException && !isNew" @click="deleteAndLeave(true)">
 									<template #icon>
 										<Delete :size="20" decorative />
@@ -199,17 +206,16 @@
 							class="property-add-talk">
 							<IconVideo :size="20" class="property-text__icon property-add-talk__icon" />
 							<AddTalkModal
-								v-if="isModalOpen"
-								:conversations="talkConversations"
+								v-if="isTalkModalOpen"
 								:calendarObjectInstance="calendarObjectInstance"
-								@close="isModalOpen = false"
+								@close="isTalkModalOpen = false"
 								@updateLocation="updateLocation"
 								@updateDescription="updateDescription" />
 							<NcButton
 								class="property-add-talk__button"
 								:disabled="isCreateTalkRoomButtonDisabled"
 								style="width: 100%"
-								@click="openModal">
+								@click="openTalkModal">
 								{{ t('calendar', 'Add Talk conversation') }}
 							</NcButton>
 						</div>
@@ -243,6 +249,12 @@
 							:propModel="rfcProps.color"
 							:value="color"
 							@update:value="updateColor" />
+						<PropertySelect
+							v-if="showInvitationForwarding"
+							:isReadOnly="isReadOnly || isViewedByOrganizer === false"
+							:propModel="propInvitationForwarding"
+							:value="invitationForwarding"
+							@update:value="updateInvitationForwarding" />
 					</div>
 				</div>
 
@@ -333,12 +345,14 @@
 import IconCancel from '@mdi/svg/svg/cancel.svg?raw'
 import IconDelete from '@mdi/svg/svg/delete.svg?raw'
 import { Parameter } from '@nextcloud/calendar-js'
+import { translate as t } from '@nextcloud/l10n'
 import moment from '@nextcloud/moment'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcActionButton,
 	NcActionLink,
 	NcActions,
+	NcActionSeparator,
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
@@ -350,6 +364,7 @@ import {
 import { mapState, mapStores } from 'pinia'
 import CalendarBlank from 'vue-material-design-icons/CalendarBlank.vue'
 import Close from 'vue-material-design-icons/Close.vue'
+import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import HelpCircleIcon from 'vue-material-design-icons/HelpCircleOutline.vue'
 import Delete from 'vue-material-design-icons/TrashCanOutline.vue'
@@ -377,7 +392,7 @@ import useCalendarObjectInstanceStore from '../store/calendarObjectInstance.js'
 import usePrincipalsStore from '../store/principals.js'
 import useSettingsStore from '../store/settings.js'
 import logger from '../utils/logger.js'
-import { containsRoomUrl } from '@/services/talkService'
+import { isAfterVersion } from '../utils/nextcloudVersion.ts'
 
 export default {
 	name: 'EditFull',
@@ -406,6 +421,7 @@ export default {
 		Delete,
 		Download,
 		ContentDuplicate,
+		ContentCopy,
 		InvitationResponseButtons,
 		AttachmentsList,
 		CalendarPickerHeader,
@@ -413,6 +429,7 @@ export default {
 		IconVideo,
 		HelpCircleIcon,
 		NcActions,
+		NcActionSeparator,
 		Close,
 	},
 
@@ -429,26 +446,36 @@ export default {
 			showModalUsers: [],
 			sharedProgress: 0,
 			showPreloader: false,
-			isModalOpen: false,
-			talkConversations: [],
-			selectedConversation: null,
 			cancelButtons: [
 				{
 					label: t('calendar', 'Discard changes'),
 					variant: 'secondary',
-					icon: atob(IconDelete.split(',')[1]),
+					icon: IconDelete,
 					callback: () => { this.cancel(true) },
 				},
 				{
 					label: t('calendar', 'Cancel'),
 					variant: 'primary',
-					icon: atob(IconCancel.split(',')[1]),
+					icon: IconCancel,
 					callback: () => { this.closeCancelDialog() },
 				},
 			],
 
 			showCancelDialog: false,
 			showFullModal: true,
+
+			propInvitationForwarding: {
+				readableName: t('calendar', 'Allow forwarding'),
+				icon: 'AccountPlusOutline',
+				options: [
+					{ value: 'TRUE', label: t('calendar', 'Anyone with the invitation can respond') },
+					{ value: 'FALSE', label: t('calendar', 'Only invited attendees can respond') },
+				],
+
+				multiple: false,
+				info: t('calendar', 'Choose "Only invited attendees can respond" to prevent attendees from forwarding the invitation to others.'),
+				defaultValue: 'TRUE',
+			},
 		}
 	},
 
@@ -462,7 +489,6 @@ export default {
 		}),
 
 		...mapState(useCalendarObjectInstanceStore, ['calendarObjectInstance']),
-		...mapState(useSettingsStore, ['talkEnabled']),
 		accessClass() {
 			return this.calendarObjectInstance?.accessClass || null
 		},
@@ -477,6 +503,10 @@ export default {
 
 		timeTransparency() {
 			return this.calendarObjectInstance?.timeTransparency || null
+		},
+
+		invitationForwarding() {
+			return this.calendarObjectInstance?.invitationForwarding ?? null
 		},
 
 		subTitle() {
@@ -504,18 +534,14 @@ export default {
 			return this.principalsStore.getCurrentUserPrincipal || null
 		},
 
-		isCreateTalkRoomButtonDisabled() {
-			return containsRoomUrl(this.calendarObjectInstance?.location) || containsRoomUrl(this.calendarObjectInstance?.description)
-		},
-
-		isCreateTalkRoomButtonVisible() {
-			return this.talkEnabled && this.isViewedByOrganizer !== false && this.isReadOnly !== true
-		},
-
 		resources() {
 			return this.calendarObjectInstance.attendees.filter((attendee) => {
 				return ['ROOM', 'RESOURCE'].includes(attendee.attendeeProperty.userType)
 			})
+		},
+
+		showInvitationForwarding() {
+			return isAfterVersion(34)
 		},
 	},
 
@@ -534,10 +560,6 @@ export default {
 	},
 
 	methods: {
-		openModal() {
-			this.isModalOpen = true
-		},
-
 		updateLocation(location) {
 			this.calendarObjectInstanceStore.changeLocation({
 				calendarObjectInstance: this.calendarObjectInstance,
@@ -597,6 +619,18 @@ export default {
 			this.calendarObjectInstanceStore.changeTimeTransparency({
 				calendarObjectInstance: this.calendarObjectInstance,
 				timeTransparency,
+			})
+		},
+
+		/**
+		 * Allow or disallow forwarding of this invitation
+		 *
+		 * @param {string} invitationForwarding Invitation forwarding value
+		 */
+		updateInvitationForwarding(invitationForwarding) {
+			this.calendarObjectInstanceStore.changeInvitationForwarding({
+				calendarObjectInstance: this.calendarObjectInstance,
+				invitationForwarding,
 			})
 		},
 

@@ -21,13 +21,13 @@ import {
 	getTotalSecondsFromAmountAndUnitForTimedEvents,
 	getTotalSecondsFromAmountHourMinutesAndUnitForAllDayEvents,
 	updateAlarms,
+	updateDefaultAlarm,
 } from '../utils/alarms.js'
 import { getObjectAtRecurrenceId } from '../utils/calendarObject.js'
 import { getClosestCSS3ColorNameForHex, getHexForColorName } from '../utils/color.js'
 import {
 	getDateFromDateTimeValue,
 } from '../utils/date.js'
-import logger from '../utils/logger.js'
 import { getBySetPositionAndBySetFromDate, getWeekDayFromDate } from '../utils/recurrence.js'
 import useCalendarObjectsStore from './calendarObjects.js'
 import useCalendarsStore from './calendars.js'
@@ -385,6 +385,18 @@ export default defineStore('calendarObjectInstance', {
 		},
 
 		/**
+		 * Change the invitation-forwarding property of an event
+		 *
+		 * @param {object} data The destructuring object
+		 * @param {object} data.calendarObjectInstance The calendarObjectInstance object
+		 * @param {string} data.invitationForwarding Invitation forwarding value
+		 */
+		changeInvitationForwarding({ calendarObjectInstance, invitationForwarding }) {
+			calendarObjectInstance.eventComponent.updatePropertyWithValue('X-NC-INVITATION-FORWARDING', invitationForwarding)
+			calendarObjectInstance.invitationForwarding = invitationForwarding
+		},
+
+		/**
 		 * Change the customized color of an event
 		 *
 		 * @param {object} data The destructuring object
@@ -474,7 +486,7 @@ export default defineStore('calendarObjectInstance', {
 				role,
 				rsvp,
 				uri,
-				attendeeProperty: attendee,
+				attendeeProperty: markRaw(attendee),
 			})
 
 			if (!calendarObjectInstance.organizer && organizer) {
@@ -1138,12 +1150,17 @@ export default defineStore('calendarObjectInstance', {
 			calendarObjectInstance,
 			type,
 			totalSeconds,
+			isDefault = false,
 		}) {
 			if (calendarObjectInstance.eventComponent) {
 				const eventComponent = calendarObjectInstance.eventComponent
 
 				const duration = DurationValue.fromSeconds(totalSeconds)
 				const alarmComponent = eventComponent.addRelativeAlarm(type, duration)
+
+				if (isDefault) {
+					alarmComponent.addProperty(new Property('X-NC-DEFAULT-ALARM', isDefault))
+				}
 
 				const alarmObject = mapAlarmComponentToAlarmObject(alarmComponent)
 
@@ -1164,7 +1181,20 @@ export default defineStore('calendarObjectInstance', {
 			alarm,
 		}) {
 			if (alarm.alarmComponent) {
-				calendarObjectInstance.eventComponent.removeAlarm(alarm.alarmComponent)
+				const alarmIterator = calendarObjectInstance.eventComponent.getAlarmIterator()
+				let matchedAlarm = null
+				const targetSeconds = alarm.alarmComponent.trigger.value.totalSeconds
+				const targetAction = alarm.alarmComponent.action
+				for (const a of alarmIterator) {
+					if (a.trigger.value.totalSeconds === targetSeconds && a.action === targetAction) {
+						matchedAlarm = a
+						break
+					}
+				}
+
+				if (matchedAlarm) {
+					calendarObjectInstance.eventComponent.removeAlarm(matchedAlarm)
+				}
 
 				const index = calendarObjectInstance.alarms.indexOf(alarm)
 				if (index !== -1) {
@@ -1372,7 +1402,6 @@ export default defineStore('calendarObjectInstance', {
 			timezoneId,
 		}) {
 			const calendarObjectsStore = useCalendarObjectsStore()
-			const settingsStore = useSettingsStore()
 
 			if (this.isNew === true) {
 				return Promise.resolve({
@@ -1391,17 +1420,17 @@ export default defineStore('calendarObjectInstance', {
 			const eventComponent = getObjectAtRecurrenceId(calendarObject, startDate)
 			const calendarObjectInstance = mapEventComponentToEventObject(eventComponent)
 
-			// Add an alarm if the user set a default one in the settings. If
-			// not, defaultReminder will not be a number (rather the string "none").
-			const defaultReminder = parseInt(settingsStore.defaultReminder)
-			if (!isNaN(defaultReminder)) {
-				this.addAlarmToCalendarObjectInstance({
-					calendarObjectInstance,
-					type: 'DISPLAY',
-					totalSeconds: defaultReminder,
-				})
-				logger.debug(`Added defaultReminder (${defaultReminder}s) to newly created event`)
+			const calendarsStore = useCalendarsStore()
+			const calendar = calendarsStore.getCalendarById(calendarObject.calendarId)
+
+			// Inherit calendar transparency to new events
+			if (['TRANSPARENT', 'OPAQUE'].includes(calendar.transparency.toUpperCase())) {
+				const value = calendar.transparency.toUpperCase()
+				calendarObjectInstance.timeTransparency = value
+				calendarObjectInstance.eventComponent.timeTransparency = value
 			}
+
+			updateDefaultAlarm(calendarObject.calendarId, calendarObjectInstance)
 
 			// Add default status
 			const rfcProps = getRFCProperties()
@@ -1870,8 +1899,8 @@ export default defineStore('calendarObjectInstance', {
 		/**
 		 *
 		 * @param {object} data The destructuring object for data
-		 * @param {object} data.calendarObjectInstance The calendarObjectInstance object
 		 * @param {object} data.recurrenceRule The recurrenceRule object to modify
+		 * @param {string} data.byDay The new until to set
 		 */
 		enableRecurrenceLimitByUntil({
 			calendarObjectInstance,
@@ -1929,6 +1958,7 @@ export default defineStore('calendarObjectInstance', {
 		 *
 		 * @param {object} data The destructuring object for data
 		 * @param {object} data.recurrenceRule The recurrenceRule object to modify
+		 * @param {number} data.count The new count to set
 		 */
 		enableRecurrenceLimitByCount({ recurrenceRule }) {
 			this.changeRecurrenceToInfinite({

@@ -88,7 +88,7 @@
 					{{ $t('calendar', 'Non-participant') }}
 				</ActionRadio>
 
-				<ActionButton @click="removeAttendee(attendee)">
+				<ActionButton :closeAfterClick="true" @click="removeAttendee(attendee)">
 					<template #icon>
 						<Delete :size="20" decorative />
 					</template>
@@ -308,6 +308,11 @@ export default {
 
 .avatar-participation-status {
 	margin-top: 5px;
+}
+
+.attendee-display {
+	flex: 1;
+	min-width: 0;
 }
 
 .invitees-list-item__member-count {

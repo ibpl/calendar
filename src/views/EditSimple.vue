@@ -70,6 +70,12 @@
 							</template>
 						</NcPopover>
 						<Actions v-if="!isLoading && !isError && !isNew" :forceMenu="true">
+							<ActionButton v-if="eventLink" @click="copyEventLink()">
+								<template #icon>
+									<ContentCopy :size="20" decorative />
+								</template>
+								{{ $t('calendar', 'Copy link') }}
+							</ActionButton>
 							<ActionLink
 								v-if="!hideEventExport && hasDownloadURL"
 								:href="downloadURL">
@@ -96,6 +102,7 @@
 								</template>
 								{{ $t('calendar', 'Delete this occurrence') }}
 							</ActionButton>
+							<NcActionSeparator v-if="canDelete && canCreateRecurrenceException" />
 							<ActionButton v-if="canDelete && canCreateRecurrenceException" @click="deleteAndLeave(true)">
 								<template #icon>
 									<Delete :size="20" decorative />
@@ -161,12 +168,32 @@
 								{{ $t('calendar', 'All day') }}
 							</NcCheckboxRadioSwitch>
 						</div>
-						<PropertyText
-							:isReadOnly="isReadOnlyOrViewing || isViewedByOrganizer === false"
-							:propModel="rfcProps.location"
-							:value="location"
-							:linkifyLinks="true"
-							@update:value="updateLocation" />
+						<div class="event-popover__location-row">
+							<PropertyText
+								:isReadOnly="isReadOnlyOrViewing || isViewedByOrganizer === false"
+								:propModel="rfcProps.location"
+								:value="location"
+								:linkifyLinks="true"
+								@update:value="updateLocation" />
+							<NcButton
+								v-if="isCreateTalkRoomButtonVisible && !isReadOnlyOrViewing"
+								variant="secondary"
+								:disabled="isCreateTalkRoomButtonDisabled"
+								:ariaLabel="t('calendar', 'Add Talk conversation')"
+								:title="t('calendar', 'Add Talk conversation')"
+								@click="openTalkModal">
+								<template #icon>
+									<IconVideo :size="20" />
+								</template>
+							</NcButton>
+						</div>
+						<AddTalkModal
+							v-if="isTalkModalOpen"
+							:calendarObjectInstance="calendarObjectInstance"
+							@close="isTalkModalOpen = false"
+							@updateLocation="updateLocation"
+							@updateDescription="updateDescription" />
+
 						<PropertyText
 							:isReadOnly="isReadOnlyOrViewing"
 							:propModel="rfcProps.description"
@@ -248,6 +275,7 @@ import {
 	NcActionLink as ActionLink,
 	NcActions as Actions,
 	NcEmptyContent as EmptyContent,
+	NcActionSeparator,
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
@@ -257,11 +285,14 @@ import { mapState, mapStores } from 'pinia'
 import Bell from 'vue-material-design-icons/BellOutline.vue'
 import CalendarBlank from 'vue-material-design-icons/CalendarBlankOutline.vue'
 import Close from 'vue-material-design-icons/Close.vue'
+import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import HelpCircleIcon from 'vue-material-design-icons/HelpCircleOutline.vue'
 import EditIcon from 'vue-material-design-icons/PencilOutline.vue'
 import Delete from 'vue-material-design-icons/TrashCanOutline.vue'
 import Download from 'vue-material-design-icons/TrayArrowDown.vue'
+import IconVideo from 'vue-material-design-icons/VideoOutline.vue'
+import AddTalkModal from '../components/Editor/AddTalkModal.vue'
 import AlarmList from '../components/Editor/Alarm/AlarmList.vue'
 import CalendarPickerHeader from '../components/Editor/CalendarPickerHeader.vue'
 import InvitationResponseButtons
@@ -290,6 +321,7 @@ export default {
 		Actions,
 		ActionButton,
 		ActionLink,
+		NcActionSeparator,
 		AlarmList,
 		Bell,
 		EmptyContent,
@@ -297,6 +329,7 @@ export default {
 		Close,
 		Download,
 		ContentDuplicate,
+		ContentCopy,
 		Delete,
 		InvitationResponseButtons,
 		CalendarPickerHeader,
@@ -305,6 +338,8 @@ export default {
 		EditIcon,
 		HelpCircleIcon,
 		NcDialog,
+		AddTalkModal,
+		IconVideo,
 	},
 
 	mixins: [
@@ -339,13 +374,13 @@ export default {
 				{
 					label: t('calendar', 'Discard changes'),
 					variant: 'secondary',
-					icon: atob(IconDelete.split(',')[1]),
+					icon: IconDelete,
 					callback: () => { this.cancel(true) },
 				},
 				{
 					label: t('calendar', 'Cancel'),
 					variant: 'primary',
-					icon: atob(IconCancel.split(',')[1]),
+					icon: IconCancel,
 					callback: () => { this.closeCancelDialog() },
 				},
 			],
@@ -887,7 +922,7 @@ export default {
 		background: var(--color-main-background);
 	}
 	.event-popover__all-day {
-		margin-inline-start: calc(var(--default-grid-baseline) * 10);
+		margin-inline-start: calc(var(--default-grid-baseline) * 11);
 	}
 
 	.event-popover__loading-icon {
@@ -913,6 +948,23 @@ export default {
 .property-alarm-wrapper {
 	display: flex;
 	align-items: center;
+
+	// In the simple popover there is no label column to align with, so strip
+	// the large indent that app-full.scss adds for the full editor layout.
+	:deep(.property-alarm-item__front) {
+		margin-inline-start: calc(var(--default-grid-baseline) * 4);
+	}
+}
+
+.event-popover__location-row {
+	display: flex;
+	align-items: start;
+	gap: var(--default-grid-baseline);
+
+	.property-text {
+		flex: 1;
+		min-width: 0;
+	}
 }
 
 </style>

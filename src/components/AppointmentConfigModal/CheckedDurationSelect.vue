@@ -6,9 +6,7 @@
 <template>
 	<div class="checked-duration-select">
 		<div class="checked-duration-select__checkbox-row">
-			<NcCheckboxRadioSwitch
-				:modelValue="enabled"
-				@update:checked="$emit('update:enabled', $event)">
+			<NcCheckboxRadioSwitch v-model="internalEnabled">
 				{{ label }}
 			</NcCheckboxRadioSwitch>
 		</div>
@@ -66,6 +64,16 @@ export default {
 	},
 
 	computed: {
+		internalEnabled: {
+			get() {
+				return this.enabled
+			},
+
+			set(value) {
+				this.$emit('update:enabled', value)
+			},
+		},
+
 		valueOrDefault() {
 			return this.modelValue ?? this.defaultValue
 		},
@@ -90,7 +98,7 @@ export default {
 		align-items: center;
 
 		&__input-wrapper {
-			flex: 0 0 20px;
+			flex: 0 0 calc(var(--default-grid-baseline) * 4);
 
 			input[type=checkbox] {
 				margin: 0;
@@ -102,10 +110,6 @@ export default {
 		input, label {
 			display: block;
 		}
-	}
-
-	&__duration {
-		//margin-left: 20px;
 	}
 }
 </style>

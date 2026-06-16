@@ -15,6 +15,7 @@ use OCA\Calendar\Db\AppointmentConfig;
 use OCA\Calendar\Db\AppointmentConfigMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IDBConnection;
+use OCP\Server;
 
 class AppointmentConfigMapperTest extends TestCase {
 	use DatabaseTransaction;
@@ -28,7 +29,7 @@ class AppointmentConfigMapperTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->db = \OC::$server->getDatabaseConnection();
+		$this->db = Server::get(\OCP\IDBConnection::class);
 		$this->mapper = new AppointmentConfigMapper(
 			$this->db
 		);
@@ -62,7 +63,6 @@ class AppointmentConfigMapperTest extends TestCase {
 		$id = $appointment->getId();
 		$appointment = $this->mapper->findById($id);
 
-
 		$this->assertEquals('okens', $appointment->getToken());
 		$this->assertEquals('Test 2', $appointment->getName());
 		$this->assertEquals('Test Description', $appointment->getDescription());
@@ -90,7 +90,6 @@ class AppointmentConfigMapperTest extends TestCase {
 		$appointment = $this->mapper->insert($appointment);
 		$token = $appointment->getToken();
 		$appointment = $this->mapper->findByToken($token);
-
 
 		$this->assertEquals('okensdsadsas', $appointment->getToken());
 		$this->assertEquals('Test 2', $appointment->getName());
