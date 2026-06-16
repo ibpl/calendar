@@ -19,6 +19,10 @@
 		<div
 			class="property-select__input"
 			:class="{ 'property-select__input--readonly': isReadOnly }">
+			<label
+				v-if="!isReadOnly"
+				:for="readableName + '-select-input'"
+				class="property-select__label">{{ readableName }}</label>
 			<NcSelect
 				v-if="!isReadOnly"
 				v-model="selectedValue"
@@ -28,7 +32,7 @@
 				:placeholder="placeholder"
 				:labelOutside="true"
 				:clearable="false"
-				inputId="value"
+				:inputId="readableName + '-select-input'"
 				label="label" />
 			<!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
 			<div v-else>{{ selectedValue.label }}</div>
@@ -85,6 +89,18 @@ export default {
 	&__input {
 		// 34px left and right need to be subtracted. See https://github.com/nextcloud/calendar/pull/3361
 		width: calc(100% - 34px - 34px);
+	}
+
+	&__label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 }
 

@@ -16,6 +16,10 @@
 		<div
 			class="property-select-multiple__input"
 			:class="{ 'property-select-multiple__input--readonly': isReadOnly }">
+			<label
+				v-if="!isReadOnly"
+				:for="readableName + '-select-multiple-input'"
+				class="property-select-multiple__label">{{ readableName }}</label>
 			<NcSelect
 				v-if="!isReadOnly"
 				:modelValue="selectionData"
@@ -29,7 +33,7 @@
 				:noWrap="false"
 				:deselectFromDropdown="false"
 				:createOption="(label) => ({ value: label, label })"
-				inputId="label"
+				:inputId="readableName + '-select-multiple-input'"
 				label="label"
 				@option:selecting="tag"
 				@option:deselected="unselectValue">
@@ -181,3 +185,17 @@ export default {
 	},
 }
 </script>
+
+<style lang="scss" scoped>
+.property-select-multiple__label {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+</style>

@@ -49,7 +49,7 @@
 						{{ $t('calendar', 'Default reminder for part-day events') }}
 					</label>
 					<NcSelect
-						id="default-alarm-partday-select"
+						inputId="default-alarm-partday-select"
 						v-model="selectedDefaultAlarmPartDay"
 						:options="defaultAlarmPartDayOptions"
 						:clearable="false"
@@ -62,7 +62,7 @@
 						{{ $t('calendar', 'Default reminder for full-day events') }}
 					</label>
 					<NcSelect
-						id="default-alarm-fullday-select"
+						inputId="default-alarm-fullday-select"
 						v-model="selectedDefaultAlarmFullDay"
 						:options="defaultAlarmFullDayOptions"
 						:clearable="false"
